@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Building2, Lock, Mail, Phone, User, UserPlus } from "lucide-react";
 
-import { createUser } from "@/lib/api/users";
-import type { CreateUserPayload, UserRole } from "@/lib/api/types";
+import { createUser } from "@/service/users.service";
+import type { CreateUserPayload, UserRole } from "@/types/user";
 
 const initialFormData: CreateUserPayload = {
   first_name: "",

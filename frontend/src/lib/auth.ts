@@ -1,11 +1,5 @@
 import type { Session } from "@supabase/supabase-js";
-
-import { getCurrentUserProfile } from "@/lib/api/users";
 import { supabase } from "@/lib/supabase";
-import {
-  getAccessToken as getStoredAccessToken,
-  getCurrentSession as getStoredCurrentSession,
-} from "@/lib/session";
 
 export type AuthStateListener = (session: Session | null) => void | Promise<void>;
 
@@ -44,13 +38,17 @@ export async function signOutUser() {
 }
 
 export async function getCurrentSession() {
-  return getStoredCurrentSession();
-}
+  const { data, error } = await supabase.auth.getSession();
 
-export async function getCurrentUser() {
-  return getCurrentUserProfile();
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data.session;
 }
 
 export async function getAccessToken() {
-  return getStoredAccessToken();
+  const session = await getCurrentSession();
+  return session?.access_token ?? null;
 }
+

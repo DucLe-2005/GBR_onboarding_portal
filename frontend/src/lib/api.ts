@@ -1,4 +1,4 @@
-import { getAccessToken } from "@/lib/session";
+import { getAccessToken } from "@/lib/auth";
 
 type ApiRequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;

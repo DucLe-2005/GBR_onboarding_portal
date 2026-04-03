@@ -1,10 +1,10 @@
-import { apiRequest } from "@/lib/api/client";
+import { apiRequest } from "@/lib/api";
 import type {
   CreateUserPayload,
   CreateUserResponse,
   UpdateUserPayload,
   User,
-} from "@/lib/api/types";
+} from "@/types/user";
 
 export function getCurrentUserProfile() {
   return apiRequest<User>("/users/me");
