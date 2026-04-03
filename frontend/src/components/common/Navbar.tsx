@@ -10,7 +10,8 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-3">
           <div className="relative h-8 w-8">
             <Image
-              src="/logo-gold.png"
+              src="/logo.png"
+              sizes="32px"
               alt="GodBless Retirement logo"
               fill
               className="object-contain"

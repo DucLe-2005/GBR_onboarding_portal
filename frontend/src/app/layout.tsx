@@ -4,7 +4,7 @@ import AppShell from "@/components/common/AppShell";
 
 export const metadata: Metadata = {
   title: "GBR Onboarding Portal",
-  description: "GodBless Retirement onboarding portal",
+  description: "God Bless Retirement onboarding portal",
 };
 
 export default function RootLayout({
@@ -14,8 +14,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[#F8F9FB] text-[#111827]">
-          <AppShell>{children}</AppShell>
+      <body className="min-h-screen overflow-x-hidden bg-[#F8F9FB] text-[#111827] antialiased">
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

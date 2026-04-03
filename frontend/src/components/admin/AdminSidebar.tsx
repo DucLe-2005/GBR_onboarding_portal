@@ -13,7 +13,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard" },
   { label: "Users", href: "/admin/users" },
-  { label: "Create User", href: "/admin/users/create" },
+  { label: "Create User", href: "/admin/create" },
 ];
 
 export default function AdminSidebar() {
@@ -34,14 +34,11 @@ export default function AdminSidebar() {
   }
 
   function isActive(href: string) {
-    if (href === "/admin/dashboard") {
-      return pathname === href;
-    }
-    return pathname.startsWith(href);
+    return pathname === href;
   }
 
   return (
-    <aside className="sticky top-16 h-[calc(100vh-128px)] w-64 shrink-0 border-r border-gray-200 bg-white">
+    <aside className="w-full shrink-0 border-b border-gray-200 bg-white lg:sticky lg:top-16 lg:h-[calc(100vh-128px)] lg:w-64 lg:border-b-0 lg:border-r">
       <div className="flex h-full flex-col">
         <div className="border-b border-gray-200 px-6 py-5">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">
@@ -50,12 +47,12 @@ export default function AdminSidebar() {
           <p className="mt-1 text-sm text-gray-500">Management Portal</p>
         </div>
 
-        <nav className="flex-1 px-4 py-6">
+        <nav className="flex-1 px-4 py-4 lg:py-6">
           <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
             Main Menu
           </p>
 
-          <ul className="space-y-2">
+          <ul className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
             {navItems.map((item) => {
               const active = isActive(item.href);
 
@@ -80,7 +77,7 @@ export default function AdminSidebar() {
         <div className="border-t border-gray-200 p-4">
           <button
             onClick={handleLogout}
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-100 lg:w-full"
           >
             Log out
           </button>
