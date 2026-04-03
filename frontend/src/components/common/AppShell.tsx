@@ -4,10 +4,10 @@ import { ReactNode, useEffect, useState } from "react";
 import { redirect, usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 
+import AdminSidebar from "@/components/admin/AdminSidebar";
+import UserSidebar from "@/components/client/UserSidebar";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
-import AdminSidebar from "@/components/common/AdminSidebar";
-import UserSidebar from "@/components/common/UserSidebar";
 import {
   getCurrentSession,
   subscribeToAuthStateChange,
@@ -16,8 +16,6 @@ import {
 type AppShellProps = {
   children: ReactNode;
 };
-
-const LOGIN_PATH = "/login";
 
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
@@ -76,11 +74,11 @@ export default function AppShell({ children }: AppShellProps) {
     return null;
   }
 
-  if (!session && pathname !== LOGIN_PATH) {
-    redirect(LOGIN_PATH);
+  if (!session && pathname !== "/login") {
+    redirect("/login");
   }
 
-  if (session && pathname === LOGIN_PATH) {
+  if (session && pathname === "/login") {
     redirect("/");
   }
 
@@ -92,15 +90,11 @@ export default function AppShell({ children }: AppShellProps) {
     <div className="flex min-h-screen flex-col bg-[#F8F9FB] text-[#111827]">
       <Navbar />
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 flex-col lg:flex-row">
         {showAdminSidebar && <AdminSidebar />}
         {showUserSidebar && <UserSidebar currentStep={1} />}
 
-        <main
-          className={`flex-1 ${
-            showAdminSidebar ? "ml-64" : showUserSidebar ? "ml-72" : ""
-          }`}
-        >
+        <main className="min-w-0 flex-1">
           {children}
         </main>
       </div>

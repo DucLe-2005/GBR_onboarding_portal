@@ -76,7 +76,7 @@ export default function UserSidebar({ currentStep }: UserSidebarProps) {
   }
 
   return (
-    <aside className="sticky top-16 h-[calc(100vh-128px)] w-72 shrink-0 border-r border-gray-200 bg-white">
+    <aside className="w-full shrink-0 border-b border-gray-200 bg-white lg:sticky lg:top-16 lg:h-[calc(100vh-128px)] lg:w-72 lg:border-b-0 lg:border-r">
       <div className="flex h-full flex-col">
         <div className="border-b border-gray-200 px-6 py-5">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">
@@ -94,8 +94,8 @@ export default function UserSidebar({ currentStep }: UserSidebarProps) {
           </p>
         </div>
 
-        <nav className="flex-1 px-4 py-6">
-          <ul className="space-y-3">
+        <nav className="flex-1 px-4 py-4 lg:py-6">
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             {stepItems.map((item, index) => {
               const active = pathname === item.href;
               const clickable = isClickable(item.step);

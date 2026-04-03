@@ -1,6 +1,11 @@
 import type { Session } from "@supabase/supabase-js";
 
+import { getCurrentUserProfile } from "@/lib/api/users";
 import { supabase } from "@/lib/supabase";
+import {
+  getAccessToken as getStoredAccessToken,
+  getCurrentSession as getStoredCurrentSession,
+} from "@/lib/session";
 
 export type AuthStateListener = (session: Session | null) => void | Promise<void>;
 
@@ -39,43 +44,13 @@ export async function signOutUser() {
 }
 
 export async function getCurrentSession() {
-  const { data, error } = await supabase.auth.getSession();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return data.session;
+  return getStoredCurrentSession();
 }
 
 export async function getCurrentUser() {
-  const token = await getAccessToken();
-
-  if (!token) {
-    throw new Error("No access token found");
-  }
-
-  const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/users/me", {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch current user");
-  }
-
-  const user = await res.json();
-  return user;
+  return getCurrentUserProfile();
 }
 
 export async function getAccessToken() {
-  const { data, error } = await supabase.auth.getSession();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return data.session?.access_token ?? null;
+  return getStoredAccessToken();
 }
