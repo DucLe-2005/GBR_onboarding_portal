@@ -6,8 +6,6 @@ import type { Session } from "@supabase/supabase-js";
 
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import UserSidebar from "@/components/client/UserSidebar";
-import Navbar from "@/components/common/Navbar";
-import Footer from "@/components/common/Footer";
 import {
   getCurrentSession,
   subscribeToAuthStateChange,
@@ -87,19 +85,15 @@ export default function AppShell({ children }: AppShellProps) {
     (role === "buyer" || role === "seller");
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F8F9FB] text-[#111827]">
-      <Navbar />
-
-      <div className="flex flex-1 flex-col lg:flex-row">
+    <div className="flex min-h-dvh flex-col bg-[#F8F9FB] text-[#111827]">
+      <div className="flex min-h-dvh flex-1 flex-col items-stretch lg:flex-row">
         {showAdminSidebar && <AdminSidebar />}
         {showUserSidebar && <UserSidebar currentStep={1} />}
 
-        <main className="min-w-0 flex-1">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col">
           {children}
         </main>
       </div>
-
-      <Footer />
     </div>
   );
 }

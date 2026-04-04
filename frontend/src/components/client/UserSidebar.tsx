@@ -76,8 +76,8 @@ export default function UserSidebar({ currentStep }: UserSidebarProps) {
   }
 
   return (
-    <aside className="w-full shrink-0 border-b border-gray-200 bg-white lg:sticky lg:top-16 lg:h-[calc(100vh-128px)] lg:w-72 lg:border-b-0 lg:border-r">
-      <div className="flex h-full flex-col">
+    <aside className="flex w-full shrink-0 flex-col border-b border-gray-200 bg-white lg:w-72 lg:border-b-0 lg:border-r">
+      <div className="flex min-h-0 flex-1 flex-col lg:min-h-dvh">
         <div className="border-b border-gray-200 px-6 py-5">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">
             GBR
