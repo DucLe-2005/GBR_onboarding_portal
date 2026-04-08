@@ -38,3 +38,12 @@ export function updateUserById(userId: string, payload: UpdateUserPayload) {
     body: payload,
   });
 }
+
+export function resendVerificationEmail(userId: string) {
+  return apiRequest<{ message: string; user_id: string; email: string }>(
+    `/users/${userId}/send-verification`,
+    {
+      method: "POST",
+    }
+  );
+}

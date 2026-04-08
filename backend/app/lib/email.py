@@ -5,7 +5,9 @@ from app.core.config import get_settings  # adjust import path if needed
 
 
 class EmailSendError(Exception):
-    """Raised when sending an email fails."""
+    """
+    Raised when sending an email fails.
+    """
 
 
 def send_email(to_email: str, subject: str, body: str) -> None:
@@ -56,7 +58,7 @@ Please confirm your email and complete your account setup here:
 If you did not expect this email, you can ignore it.
 
 Best regards,
-Your Team
+GBR Onboarding Team
 """.strip()
 
     send_email(

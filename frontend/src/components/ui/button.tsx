@@ -13,9 +13,14 @@ const primaryClassName =
 const inverseClassName =
   "bg-[#071633] text-[#C9A65B] hover:brightness-110";
 
+/** Neutral gray (for cancel, secondary actions) */
+const secondaryClassName =
+  "bg-gray-100 text-gray-700 hover:bg-gray-200";
+
 const variantClassNames = {
   primary: primaryClassName,
   inverse: inverseClassName,
+  secondary: secondaryClassName,
 } as const;
 
 export type ButtonVariant = keyof typeof variantClassNames;

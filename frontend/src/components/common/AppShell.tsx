@@ -31,12 +31,24 @@ const ADMIN_ALLOWED_ROUTES = new Set([
 
 const USER_ALLOWED_ROUTES = new Set([
   "/dashboard",
-  "/agreement",
+  "/agreements",
   "/deposit-fees",
 ]);
 
-function isAllowedRoute(pathname: string, allowedRoutes: Set<string>) {
-  return allowedRoutes.has(pathname);
+function isAllowedRoute(
+  pathname: string,
+  allowedRoutes: Set<string>,
+  role: string | null
+) {
+  if (allowedRoutes.has(pathname)) {
+    return true;
+  }
+
+  if (role === "admin" && pathname.startsWith("/admin/clients/")) {
+    return true;
+  }
+
+  return false;
 }
 
 export default function AppShell({ children }: AppShellProps) {
@@ -153,11 +165,11 @@ export default function AppShell({ children }: AppShellProps) {
   const isAdmin = role === "admin";
   const isUser = role === "buyer" || role === "seller";
 
-  if (!isPublicRoute && isAdmin && !isAllowedRoute(pathname, ADMIN_ALLOWED_ROUTES)) {
+  if (!isPublicRoute && isAdmin && !isAllowedRoute(pathname, ADMIN_ALLOWED_ROUTES, role)) {
     redirect("/admin/clients");
   }
 
-  if (!isPublicRoute && isUser && !isAllowedRoute(pathname, USER_ALLOWED_ROUTES)) {
+  if (!isPublicRoute && isUser && !isAllowedRoute(pathname, USER_ALLOWED_ROUTES, role)) {
     redirect("/dashboard");
   }
 

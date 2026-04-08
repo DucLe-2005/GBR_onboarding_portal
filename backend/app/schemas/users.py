@@ -27,7 +27,6 @@ class UpdateUserRequest(BaseModel):
     """Payload used to update mutable user profile fields."""
     first_name: str | None = None
     last_name: str | None = None
-    email: EmailStr | None = None
     phone_number: str | None = None
     company_name: str | None = None
 
@@ -42,3 +41,10 @@ class UserResponse(BaseModel):
     role: Role
     current_step: int | None
     company_name: str | None = None
+    email_verified: bool
+
+
+class SendVerificationEmailResponse(BaseModel):
+    message: str
+    user_id: str
+    email: EmailStr
