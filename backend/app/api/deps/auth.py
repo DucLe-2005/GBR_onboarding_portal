@@ -1,20 +1,23 @@
 from typing import Annotated, Any, TypeAlias
 
 from fastapi import Depends, Header, HTTPException, status
+from supabase import Client
 
 from app.core.supabase_client import (
     get_supabase_client,
+    get_service_supabase_client,
+    get_user_supabase_client,
 )
-from app.lib.users import _get_user_profile_by_id
-
 
 AuthUser: TypeAlias = Any
-AppUser: TypeAlias = dict[str, Any]
 AuthorizationHeader = Annotated[str | None, Header()]
 
 
-def get_current_user(authorization: AuthorizationHeader = None) -> AuthUser:
-    """Validate the bearer token and return the authenticated Supabase user."""
+# =========================
+#   token extraction
+# =========================
+def get_access_token(authorization: AuthorizationHeader = None) -> str:
+    """Extract Bearer token from Authorization header."""
     if not authorization:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -27,7 +30,7 @@ def get_current_user(authorization: AuthorizationHeader = None) -> AuthUser:
             detail="Invalid authorization header",
         )
 
-    token = authorization.replace("Bearer ", "").strip()
+    token = authorization.removeprefix("Bearer ").strip()
 
     if not token:
         raise HTTPException(
@@ -35,10 +38,27 @@ def get_current_user(authorization: AuthorizationHeader = None) -> AuthUser:
             detail="Missing bearer token",
         )
 
-    supabase = get_supabase_client()
-    response = supabase.auth.get_user(token)
+    return token
 
-    user = response.user
+
+# =========================
+#   get auth user
+# =========================
+def get_current_user(
+    token: Annotated[str, Depends(get_access_token)],
+) -> AuthUser:
+    """Validate token with Supabase and return auth user."""
+    supabase = get_supabase_client()
+
+    try:
+        response = supabase.auth.get_user(token)
+        user = response.user
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -48,21 +68,29 @@ def get_current_user(authorization: AuthorizationHeader = None) -> AuthUser:
     return user
 
 
-def get_current_app_user(
-    auth_user: Annotated[AuthUser, Depends(get_current_user)],
-) -> AppUser:
-    """Load the application user profile that matches the authenticated auth user."""
-    return _get_user_profile_by_id(auth_user.id)
-
-
+# =========================
+#   admin check
+# =========================
 def require_admin(
-    current_user: Annotated[AppUser, Depends(get_current_app_user)],
-) -> AppUser:
-    """Ensure the current application user has the admin role."""
-    if current_user["role"] != "admin":
+    auth_user: Annotated[AuthUser, Depends(get_current_user)],
+) -> AuthUser:
+    """Ensure user is admin using metadata (no DB call)."""
+    role = (auth_user.user_metadata or {}).get("role")
+
+    if role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
         )
 
-    return current_user
+    return auth_user
+
+
+# =========================
+#   get supabase clients
+# =========================
+def get_user_supabase(
+    token: Annotated[str, Depends(get_access_token)],
+) -> Client:
+    """Supabase client acting as the logged-in user"""
+    return get_user_supabase_client(token)

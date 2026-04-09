@@ -9,6 +9,7 @@ export type User = {
   role: UserRole;
   current_step: number | null;
   company_name: string | null;
+  email_verified: boolean;
 };
 
 export type CreateUserPayload = {

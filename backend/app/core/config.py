@@ -3,7 +3,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application settings loaded from environment variables or .env."""
+    """
+    Application settings loaded from environment variables or .env.
+    """
 
     # Supabase
     supabase_url: str
@@ -42,5 +44,7 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    """Return a cached settings instance"""
+    """
+    Return a cached settings instance
+    """
     return Settings()
