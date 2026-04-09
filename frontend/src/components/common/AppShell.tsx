@@ -24,6 +24,12 @@ const PUBLIC_ROUTES = new Set([
   "/auth/reset-password",
 ]);
 
+const AUTH_ONLY_PUBLIC_ROUTES = new Set([
+  "/login",
+  "/forgot-password",
+  "/auth/reset-password",
+]);
+
 const ADMIN_ALLOWED_ROUTES = new Set([
   "/admin/create",
   "/admin/clients",
@@ -51,12 +57,25 @@ function isAllowedRoute(
   return false;
 }
 
+function getDefaultRouteForRole(role: string | null) {
+  if (role === "admin") {
+    return "/admin/clients";
+  }
+
+  if (role === "buyer" || role === "seller") {
+    return "/dashboard";
+  }
+
+  return "/";
+}
+
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [role, setRole] = useState<string | null>(null);
 
   const isPublicRoute = PUBLIC_ROUTES.has(pathname);
+  const isAuthOnlyPublicRoute = AUTH_ONLY_PUBLIC_ROUTES.has(pathname);
 
   const syncAuth = useCallback((currentSession: Session | null) => {
     setSession(currentSession);
@@ -150,26 +169,26 @@ export default function AppShell({ children }: AppShellProps) {
     redirect("/login");
   }
 
-  if (session && pathname === "/login") {
-    if (role === "admin") {
-      redirect("/admin/clients");
-    }
-
-    if (role === "buyer" || role === "seller") {
-      redirect("/dashboard");
-    }
-
-    redirect("/");
+  if (session && isAuthOnlyPublicRoute) {
+    redirect(getDefaultRouteForRole(role));
   }
 
   const isAdmin = role === "admin";
   const isUser = role === "buyer" || role === "seller";
 
-  if (!isPublicRoute && isAdmin && !isAllowedRoute(pathname, ADMIN_ALLOWED_ROUTES, role)) {
+  if (
+    !isPublicRoute &&
+    isAdmin &&
+    !isAllowedRoute(pathname, ADMIN_ALLOWED_ROUTES, role)
+  ) {
     redirect("/admin/clients");
   }
 
-  if (!isPublicRoute && isUser && !isAllowedRoute(pathname, USER_ALLOWED_ROUTES, role)) {
+  if (
+    !isPublicRoute &&
+    isUser &&
+    !isAllowedRoute(pathname, USER_ALLOWED_ROUTES, role)
+  ) {
     redirect("/dashboard");
   }
 
