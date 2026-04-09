@@ -3,6 +3,8 @@ from typing import Any
 from fastapi import HTTPException, status
 from supabase import Client
 
+from app.schemas.users import UpdateUserRequest
+
 
 class UserRepository:
     """
@@ -21,6 +23,7 @@ class UserRepository:
         """
         Fetch the current user's profile row using RLS.
         """
+
         result = (
             supabase.table("user")
             .select("*")
@@ -76,6 +79,34 @@ class UserRepository:
         )
 
         return result.data or []
+
+    def update_user_step(
+        self,
+        supabase: Client,
+        user_id: str,
+        step: int,
+    ) -> dict[str, Any]:
+        """Update only the onboarding step stored in the application user table."""
+        try:
+            result = (
+                supabase.table("user")
+                .update({"current_step": step})
+                .eq("id", user_id)
+                .execute()
+            )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to update user step: {str(exc)}",
+            ) from exc
+
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to update user step",
+            )
+
+        return result.data[0]
 
     # =========================
     # auth (admin only)
