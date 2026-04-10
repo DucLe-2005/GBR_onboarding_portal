@@ -31,7 +31,6 @@ class Settings(BaseSettings):
     smtp_from_email: str
 
     # frontend url
-    frontend_login_url: str
     frontend_url: str
 
     model_config = SettingsConfigDict(
