@@ -6,7 +6,12 @@ import string
 from fastapi import HTTPException, status
 from pydantic import BaseModel
 
-from app.lib.email import ConfirmationEmailError, send_confirmation_email
+from app.lib.email import (
+    ConfirmationEmailError,
+    EmailSendError,
+    send_confirmation_email,
+    send_next_step_reminder_email,
+)
 from app.api.repository.users import UserRepository
 from app.schemas.users import (
     CreateUserRequest,
@@ -30,12 +35,12 @@ class UserService:
     # helpers
     # =========================
 
-    def _build_metadata_update(
+    def _build_user_metadata_update(
         self,
         existing_metadata: dict[str, Any],
         update_data: dict[str, Any],
     ) -> dict[str, Any]:
-        """Merge editable profile fields into the auth metadata payload."""
+        """Merge editable profile fields into user_metadata."""
         new_metadata = dict(existing_metadata)
 
         if "first_name" in update_data:
@@ -76,6 +81,42 @@ class UserService:
 
         return "".join(password_chars)
 
+    def _send_confirmation_email(self, payload: EmailPayload) -> None:
+        """Wrap shared confirmation email sending as an HTTP-friendly service call."""
+        try:
+            send_confirmation_email(
+                email=payload.email,
+                first_name=payload.first_name,
+                last_name=payload.last_name,
+                role=payload.role,
+                temporary_password=payload.temporary_password,
+            )
+        except ConfirmationEmailError as e:
+            raise HTTPException(
+                status_code=e.status_code,
+                detail=e.detail,
+            ) from e
+
+    def _send_next_step_reminder_email(
+        self,
+        *,
+        email: str,
+        first_name: str,
+        current_step: int | None,
+    ) -> None:
+        """Wrap reminder email sending as an HTTP-friendly service call."""
+        try:
+            send_next_step_reminder_email(
+                to_email=email,
+                first_name=first_name,
+                current_step=current_step,
+            )
+        except EmailSendError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            ) from e
+
     # =========================
     # user flow
     # =========================
@@ -92,15 +133,18 @@ class UserService:
         auth_user: Any,
         payload: UpdateUserRequest,
     ) -> dict[str, Any]:
-        """Update the logged-in user's auth metadata and profile-facing fields."""
+        """Update the logged-in user's profile-facing auth fields."""
         existing_profile = self.repo.get_my_user_profile(auth_user.id)
         update_data = payload.model_dump(exclude_unset=True)
 
         if not update_data:
             return existing_profile
 
-        existing_metadata = auth_user.user_metadata or {}
-        new_metadata = self._build_metadata_update(existing_metadata, update_data)
+        existing_user_metadata = auth_user.user_metadata or {}
+        new_user_metadata = self._build_user_metadata_update(
+            existing_user_metadata,
+            update_data,
+        )
 
         auth_update_payload: dict[str, Any] = {}
 
@@ -108,7 +152,7 @@ class UserService:
             auth_update_payload["phone"] = update_data["phone_number"]
 
         if any(field in update_data for field in ["first_name", "last_name", "company_name"]):
-            auth_update_payload["user_metadata"] = new_metadata
+            auth_update_payload["user_metadata"] = new_user_metadata
 
         try:
             if auth_update_payload:
@@ -120,11 +164,6 @@ class UserService:
             ) from exc
 
         return self.repo.get_my_user_profile(auth_user.id)
-
-    def get_current_user_step(self, user_id: str) -> int | None:
-        """Return the authenticated user's current onboarding step."""
-        user = self.repo.get_my_user_profile(user_id)
-        return user.get("current_step")
 
     # =========================
     # admin flow
@@ -151,7 +190,7 @@ class UserService:
         user_id: str,
         payload: UpdateUserRequest,
     ) -> dict[str, Any]:
-        """Apply admin-driven updates to another user's auth metadata."""
+        """Apply admin-driven updates to another user's profile-facing auth fields."""
         existing_profile = self.repo.get_user_profile_by_id(user_id)
         update_data = payload.model_dump(exclude_unset=True)
 
@@ -159,8 +198,11 @@ class UserService:
             return existing_profile
 
         auth_user = self.repo.get_auth_user_by_id_admin(user_id)
-        existing_metadata = auth_user.user_metadata or {}
-        new_metadata = self._build_metadata_update(existing_metadata, update_data)
+        existing_user_metadata = auth_user.user_metadata or {}
+        new_user_metadata = self._build_user_metadata_update(
+            existing_user_metadata,
+            update_data,
+        )
 
         auth_update_payload: dict[str, Any] = {}
 
@@ -168,7 +210,7 @@ class UserService:
             auth_update_payload["phone"] = update_data["phone_number"]
 
         if any(field in update_data for field in ["first_name", "last_name", "company_name"]):
-            auth_update_payload["user_metadata"] = new_metadata
+            auth_update_payload["user_metadata"] = new_user_metadata
 
         try:
             if auth_update_payload:
@@ -180,6 +222,42 @@ class UserService:
             ) from exc
 
         return self.repo.get_user_profile_by_id(user_id)
+
+    def send_next_step_reminder_by_admin(
+        self,
+        user_id: str,
+    ) -> dict[str, str]:
+        """
+        Send a reminder email to the user about their current onboarding step.
+        """
+        profile = self.get_buyer_seller_user_by_id(user_id)
+        auth_user = self.repo.get_auth_user_by_id_admin(user_id)
+
+        email = getattr(auth_user, "email", None)
+        if not email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Auth user email not found",
+            )
+
+        current_step = profile.get("current_step")
+        if current_step == 2:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User has already completed onboarding",
+            )
+
+        self._send_next_step_reminder_email(
+            email=email,
+            first_name=profile.get("first_name") or "",
+            current_step=current_step,
+        )
+
+        return {
+            "message": "Reminder email sent successfully",
+            "user_id": user_id,
+            "email": email,
+        }
 
     # =========================
     # create + email
@@ -199,9 +277,12 @@ class UserService:
                     "user_metadata": {
                         "first_name": payload.first_name,
                         "last_name": payload.last_name,
+                        "company_name": payload.company_name,
+                    },
+                    "app_metadata": {
                         "role": payload.role,
                         "current_step": 0,
-                        "company_name": payload.company_name,
+                        "password_changed": False,
                     },
                 }
             )
@@ -223,22 +304,6 @@ class UserService:
 
         return response
 
-    def _send_confirmation_email(self, payload: EmailPayload) -> None:
-        """Wrap shared confirmation email sending as an HTTP-friendly service call."""
-        try:
-            send_confirmation_email(
-                email=payload.email,
-                first_name=payload.first_name,
-                last_name=payload.last_name,
-                role=payload.role,
-                temporary_password=payload.temporary_password,
-            )
-        except ConfirmationEmailError as e:
-            raise HTTPException(
-                status_code=e.status_code,
-                detail=e.detail,
-            ) from e
-
     def resend_verification_email_by_admin(
         self,
         user_id: str,
@@ -250,7 +315,8 @@ class UserService:
         profile = self.get_buyer_seller_user_by_id(user_id)
         auth_user = self.repo.get_auth_user_by_id_admin(user_id)
 
-        metadata = auth_user.user_metadata or {}
+        user_metadata = auth_user.user_metadata or {}
+        app_metadata = auth_user.app_metadata or {}
         email = getattr(auth_user, "email", None)
 
         if not email:
@@ -266,6 +332,10 @@ class UserService:
                 user_id,
                 {
                     "password": temporary_password,
+                    "app_metadata": {
+                        **app_metadata,
+                        "password_changed": False,
+                    },
                 },
             )
         except Exception as exc:
@@ -277,9 +347,9 @@ class UserService:
         self._send_confirmation_email(
             EmailPayload(
                 email=email,
-                first_name=metadata.get("first_name") or "",
-                last_name=metadata.get("last_name") or "",
-                role=metadata.get("role") or profile.get("role") or "",
+                first_name=user_metadata.get("first_name") or "",
+                last_name=user_metadata.get("last_name") or "",
+                role=app_metadata.get("role") or profile.get("role") or "",
                 temporary_password=temporary_password,
             )
         )
@@ -289,6 +359,20 @@ class UserService:
             "user_id": user_id,
             "email": email,
         }
+
+    # =========================
+    # others
+    # =========================
+
+    def mark_my_password_changed(
+        self,
+        user_id: str,
+    ) -> dict[str, Any]:
+        """
+        Mark the current user's password_changed flag as true.
+        """
+        self.repo.mark_password_changed(user_id)
+        return self.repo.get_my_user_profile(user_id)
 
 
 @lru_cache

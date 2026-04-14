@@ -25,7 +25,6 @@ class UserRepository:
         """
         Fetch the current user's profile row.
         """
-
         result = (
             self.supabase.table("user")
             .select("*")
@@ -85,27 +84,93 @@ class UserRepository:
         user_id: str,
         step: int,
     ) -> dict[str, Any]:
-        """Update only the onboarding step stored in the application user table."""
+        """
+        Update onboarding step via Supabase Auth app_metadata (safe merge).
+        """
         try:
-            result = (
-                self.supabase.table("user")
-                .update({"current_step": step})
-                .eq("id", user_id)
-                .execute()
+            user_response = self.supabase.auth.admin.get_user_by_id(user_id)
+            user = user_response.user
+
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found",
+                )
+
+            existing_app_metadata = user.app_metadata or {}
+
+            updated_app_metadata = {
+                **existing_app_metadata,
+                "current_step": step,
+            }
+
+            result = self.supabase.auth.admin.update_user_by_id(
+                user_id,
+                {"app_metadata": updated_app_metadata},
             )
+
+        except HTTPException:
+            raise
         except Exception as exc:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Failed to update user step: {str(exc)}",
             ) from exc
 
-        if not result.data:
+        if not result.user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to update user step",
             )
 
-        return result.data[0]
+        return result.user
+
+
+    def mark_password_changed(
+        self,
+        user_id: str,
+    ) -> Any:
+        """
+        Mark the auth user's password_changed flag to true in app_metadata.
+        """
+        try:
+            user_response = self.supabase.auth.admin.get_user_by_id(user_id)
+            user = user_response.user
+
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Auth user not found",
+                )
+
+            existing_app_metadata = user.app_metadata or {}
+
+            updated_app_metadata = {
+                **existing_app_metadata,
+                "password_changed": True,
+            }
+
+            result = self.supabase.auth.admin.update_user_by_id(
+                user_id,
+                {"app_metadata": updated_app_metadata},
+            )
+
+        except HTTPException:
+            raise
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to mark password as changed: {str(exc)}",
+            ) from exc
+
+        if not result.user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to mark password as changed",
+            )
+
+        return result.user
+
 
     # =========================
     # auth (admin only)
@@ -146,5 +211,7 @@ class UserRepository:
         self.supabase.auth.admin.update_user_by_id(user_id, auth_update_payload)
 
     def create_auth_user_admin(self, payload: dict[str, Any]) -> Any:
-        """Admin: create an auth user with the provided payload."""
+        """
+        Admin: create an auth user with the provided payload.
+        """
         return self.supabase.auth.admin.create_user(payload)

@@ -4,7 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 
 import ClientTableRow from "@/components/admin/ClientTableRow";
 import { Button } from "@/components/ui/button";
-import { getUsers, resendVerificationEmail } from "@/service/users.service";
+import {
+  getUsers,
+  resendVerificationEmail,
+  sendReminderEmail,
+} from "@/service/users.service";
 import type { User } from "@/types/user";
 import AppLoadingScreen from "@/components/common/AppLoadingScreen";
 
@@ -13,17 +17,39 @@ function getFullName(user: User) {
   return fullName || user.email;
 }
 
+function getStepLabel(step: number | null) {
+  const stepMap: Record<number, string> = {
+    0: "Agreement",
+    1: "Deposit Fee",
+    2: "Complete",
+  };
+
+  if (step === null) return "Unknown";
+  return stepMap[step] ?? `Step ${step}`;
+}
+
 export default function AdminClientsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+  const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
+
   const [isSendingVerification, setIsSendingVerification] = useState(false);
-  const [statusByUserId, setStatusByUserId] = useState<Record<string, string>>(
-    {},
-  );
+  const [isSendingReminder, setIsSendingReminder] = useState(false);
+  const [isSendingReminderForUserId, setIsSendingReminderForUserId] = useState<
+    string | null
+  >(null);
+
+  const [verificationStatusByUserId, setVerificationStatusByUserId] = useState<
+    Record<string, string>
+  >({});
+
+  const [reminderStatusByUserId, setReminderStatusByUserId] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     async function loadClients() {
@@ -41,7 +67,7 @@ export default function AdminClientsPage() {
       }
     }
 
-    loadClients();
+    void loadClients();
   }, []);
 
   const clients = useMemo(() => {
@@ -50,39 +76,43 @@ export default function AdminClientsPage() {
     );
   }, [users]);
 
-  // =========================
-  // summary counts
-  // =========================
-
   const verifiedCount = useMemo(() => {
     return clients.filter((u) => u.email_verified).length;
   }, [clients]);
 
   const agreementCount = useMemo(() => {
-    return clients.filter((u) => u.current_step === 1).length;
-  }, [clients]);
-
-  const depositCount = useMemo(() => {
-    return clients.filter((u) => u.current_step === 2).length;
-  }, [clients]);
-
-  const completedCount = useMemo(() => {
     return clients.filter((u) => u.current_step === 0).length;
   }, [clients]);
 
-  // =========================
-  // modal logic
-  // =========================
+  const depositCount = useMemo(() => {
+    return clients.filter((u) => u.current_step === 1).length;
+  }, [clients]);
+
+  const completedCount = useMemo(() => {
+    return clients.filter((u) => u.current_step === 2).length;
+  }, [clients]);
 
   function openVerificationModal(user: User) {
     if (user.email_verified) return;
     setSelectedUser(user);
-    setIsModalOpen(true);
+    setIsVerificationModalOpen(true);
   }
 
   function closeVerificationModal() {
     if (isSendingVerification) return;
-    setIsModalOpen(false);
+    setIsVerificationModalOpen(false);
+    setSelectedUser(null);
+  }
+
+  function openReminderModal(user: User) {
+    if (user.current_step === 2) return;
+    setSelectedUser(user);
+    setIsReminderModalOpen(true);
+  }
+
+  function closeReminderModal() {
+    if (isSendingReminder) return;
+    setIsReminderModalOpen(false);
     setSelectedUser(null);
   }
 
@@ -94,17 +124,17 @@ export default function AdminClientsPage() {
 
       const response = await resendVerificationEmail(selectedUser.id);
 
-      setStatusByUserId((prev) => ({
+      setVerificationStatusByUserId((prev) => ({
         ...prev,
         [selectedUser.id]: response.message,
       }));
 
-      setIsModalOpen(false);
+      setIsVerificationModalOpen(false);
       setSelectedUser(null);
     } catch (err) {
       console.error("Failed to send verification email:", err);
 
-      setStatusByUserId((prev) => ({
+      setVerificationStatusByUserId((prev) => ({
         ...prev,
         [selectedUser.id]: "Failed to send verification email.",
       }));
@@ -113,14 +143,38 @@ export default function AdminClientsPage() {
     }
   }
 
-  // =========================
-  // UI
-  // =========================
+  async function handleSendReminder() {
+    if (!selectedUser) return;
+
+    try {
+      setIsSendingReminder(true);
+      setIsSendingReminderForUserId(selectedUser.id);
+
+      const response = await sendReminderEmail(selectedUser.id);
+
+      setReminderStatusByUserId((prev) => ({
+        ...prev,
+        [selectedUser.id]: response.message,
+      }));
+
+      setIsReminderModalOpen(false);
+      setSelectedUser(null);
+    } catch (err) {
+      console.error("Failed to send reminder email:", err);
+
+      setReminderStatusByUserId((prev) => ({
+        ...prev,
+        [selectedUser.id]: "Failed to send reminder email.",
+      }));
+    } finally {
+      setIsSendingReminder(false);
+      setIsSendingReminderForUserId(null);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-10">
       <div className="mx-auto max-w-7xl space-y-8">
-        {/* HEADER */}
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 px-6 py-8 text-white lg:px-8">
             <h1 className="text-3xl font-semibold">Client Dashboard</h1>
@@ -130,9 +184,7 @@ export default function AdminClientsPage() {
           </div>
         </section>
 
-        {/* SUMMARY CARDS */}
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {/* All Clients */}
           <div className="rounded-2xl border border-[#E5C07B] bg-white p-5 shadow-sm">
             <p className="text-sm font-medium text-[#B8962E]">All Clients</p>
             <p className="mt-2 text-3xl font-semibold text-slate-900">
@@ -140,7 +192,6 @@ export default function AdminClientsPage() {
             </p>
           </div>
 
-          {/* Verified */}
           <div className="rounded-2xl border border-orange-200 bg-white p-5 shadow-sm">
             <p className="text-sm font-medium text-orange-700">Verified</p>
             <p className="mt-2 text-3xl font-semibold text-slate-900">
@@ -151,39 +202,31 @@ export default function AdminClientsPage() {
             </p>
           </div>
 
-          {/* Step 1 */}
           <div className="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-blue-700">Step 1</p>
+            <p className="text-sm font-medium text-blue-700">Agreement</p>
             <p className="mt-2 text-3xl font-semibold text-slate-900">
               {agreementCount}
             </p>
-            <p className="mt-1 text-sm font-medium text-blue-700">Agreement</p>
+            <p className="mt-1 text-sm font-medium text-blue-700">Step 0</p>
           </div>
 
-          {/* Step 2 */}
           <div className="rounded-2xl border border-purple-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-purple-700">Step 2</p>
+            <p className="text-sm font-medium text-purple-700">Deposit Fee</p>
             <p className="mt-2 text-3xl font-semibold text-slate-900">
               {depositCount}
             </p>
-            <p className="mt-1 text-sm font-medium text-purple-700">
-              Deposit Fee
-            </p>
+            <p className="mt-1 text-sm font-medium text-purple-700">Step 1</p>
           </div>
 
-          {/* Completed */}
           <div className="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
             <p className="text-sm font-medium text-emerald-700">Completed</p>
             <p className="mt-2 text-3xl font-semibold text-slate-900">
               {completedCount}
             </p>
-            <p className="mt-1 text-sm font-medium text-emerald-700">
-              Fully onboarded
-            </p>
+            <p className="mt-1 text-sm font-medium text-emerald-700">Step 2</p>
           </div>
         </section>
 
-        {/* TABLE */}
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-6 py-5">
             <h2 className="text-xl font-semibold text-slate-900">
@@ -212,6 +255,7 @@ export default function AdminClientsPage() {
                     <th className="px-6 py-4 font-semibold">Role</th>
                     <th className="px-6 py-4 font-semibold">Current Step</th>
                     <th className="px-6 py-4 font-semibold">Email Confirmed</th>
+                    <th className="px-6 py-4 font-semibold">Reminder</th>
                   </tr>
                 </thead>
 
@@ -220,11 +264,18 @@ export default function AdminClientsPage() {
                     <ClientTableRow
                       key={user.id}
                       user={user}
-                      isSending={
+                      isSendingVerification={
                         isSendingVerification && selectedUser?.id === user.id
                       }
-                      statusMessage={statusByUserId[user.id] ?? null}
+                      verificationStatusMessage={
+                        verificationStatusByUserId[user.id] ?? null
+                      }
+                      isSendingReminder={isSendingReminderForUserId === user.id}
+                      reminderStatusMessage={
+                        reminderStatusByUserId[user.id] ?? null
+                      }
                       onOpenVerificationModal={openVerificationModal}
+                      onOpenReminderModal={openReminderModal}
                     />
                   ))}
                 </tbody>
@@ -234,8 +285,7 @@ export default function AdminClientsPage() {
         </section>
       </div>
 
-      {/* MODAL */}
-      {isModalOpen && selectedUser && (
+      {isVerificationModalOpen && selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h3 className="text-lg font-semibold text-[#111827]">
@@ -267,6 +317,47 @@ export default function AdminClientsPage() {
                 disabled={isSendingVerification}
               >
                 {isSendingVerification ? "Sending..." : "Send Verification"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isReminderModalOpen && selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-[#111827]">
+              Send reminder email
+            </h3>
+
+            <p className="mt-3 text-sm text-gray-600">
+              Send a reminder email to{" "}
+              <span className="font-medium text-[#111827]">
+                {getFullName(selectedUser)}
+              </span>
+              ?
+            </p>
+
+            <p className="mt-2 text-sm text-gray-500">{selectedUser.email}</p>
+            <p className="mt-2 text-sm text-gray-500">
+              Next step: {getStepLabel(selectedUser.current_step)}
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                variant="secondary"
+                onClick={closeReminderModal}
+                disabled={isSendingReminder}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                variant="primary"
+                onClick={handleSendReminder}
+                disabled={isSendingReminder}
+              >
+                {isSendingReminder ? "Sending..." : "Send Reminder"}
               </Button>
             </div>
           </div>

@@ -18,8 +18,9 @@ function formatStep(step: number | null) {
   if (step === null) return "N/A";
 
   const stepMap: Record<number, string> = {
-    1: "Agreement",
-    2: "Deposit Fees",
+    0: "Agreement",
+    1: "Deposit Fee",
+    2: "Complete",
   };
 
   return stepMap[step] ?? `Step ${step}`;

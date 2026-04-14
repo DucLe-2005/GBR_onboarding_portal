@@ -12,8 +12,9 @@ function formatStep(step: number | null) {
   if (step === null) return "";
 
   const stepMap: Record<number, string> = {
-    1: "Agreement",
-    2: "Deposit Fees",
+    0: "Agreement",
+    1: "Deposit Fee",
+    2: "Complete",
   };
 
   return stepMap[step] ?? `Step ${step}`;
@@ -26,17 +27,25 @@ function getFullName(user: User) {
 
 type ClientTableRowProps = {
   user: User;
-  isSending?: boolean;
-  statusMessage?: string | null;
+  isSendingVerification?: boolean;
+  verificationStatusMessage?: string | null;
+  isSendingReminder?: boolean;
+  reminderStatusMessage?: string | null;
   onOpenVerificationModal: (user: User) => void;
+  onOpenReminderModal: (user: User) => void;
 };
 
 export default function ClientTableRow({
   user,
-  isSending = false,
-  statusMessage = null,
+  isSendingVerification = false,
+  verificationStatusMessage = null,
+  isSendingReminder = false,
+  reminderStatusMessage = null,
   onOpenVerificationModal,
+  onOpenReminderModal,
 }: ClientTableRowProps) {
+  const isCompleted = user.current_step === 2;
+
   return (
     <tr className="border-t border-gray-200">
       <td className="px-4 py-4">
@@ -69,22 +78,51 @@ export default function ClientTableRow({
           <button
             type="button"
             onClick={() => onOpenVerificationModal(user)}
-            disabled={user.email_verified || isSending}
+            disabled={user.email_verified || isSendingVerification}
             className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium transition ${
               user.email_verified
                 ? "cursor-not-allowed bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700 hover:bg-red-200 cursor-pointer"
+                : "cursor-pointer bg-red-100 text-red-700 hover:bg-red-200"
             }`}
           >
             {user.email_verified
               ? "Verified"
-              : isSending
+              : isSendingVerification
               ? "Sending..."
               : "Not verified"}
           </button>
 
-          {statusMessage && (
-            <span className="text-xs text-gray-500">{statusMessage}</span>
+          {verificationStatusMessage && (
+            <span className="text-xs text-gray-500">
+              {verificationStatusMessage}
+            </span>
+          )}
+        </div>
+      </td>
+
+      <td className="px-4 py-4">
+        <div className="flex flex-col gap-1">
+          <button
+            type="button"
+            onClick={() => onOpenReminderModal(user)}
+            disabled={isCompleted || isSendingReminder}
+            className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium transition ${
+              isCompleted
+                ? "cursor-not-allowed bg-gray-100 text-gray-500"
+                : "cursor-pointer bg-amber-100 text-amber-700 hover:bg-amber-200"
+            }`}
+          >
+            {isCompleted
+              ? "Completed"
+              : isSendingReminder
+              ? "Sending..."
+              : "Send reminder"}
+          </button>
+
+          {reminderStatusMessage && (
+            <span className="text-xs text-gray-500">
+              {reminderStatusMessage}
+            </span>
           )}
         </div>
       </td>

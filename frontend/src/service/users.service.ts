@@ -55,3 +55,12 @@ export function resendVerificationEmail(userId: string) {
     }
   );
 }
+
+export function sendReminderEmail(userId: string) {
+  return apiRequest<{ message: string; user_id: string; email: string }>(
+    `/users/${userId}/send-reminder`,
+    {
+      method: "POST",
+    },
+  );
+}
