@@ -302,7 +302,7 @@ class DocusignService:
         self.user_repository.update_user_step(contract["user_id"], 1)
         print(
             f"[DocuSign] user advanced to payment step "
-            f"user_id={contract['user_id']} step=2"
+            f"user_id={contract['user_id']}"
         )
 
 

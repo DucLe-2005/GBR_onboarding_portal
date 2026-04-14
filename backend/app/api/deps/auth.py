@@ -8,9 +8,6 @@ AuthUser: TypeAlias = Any
 AuthorizationHeader = Annotated[str | None, Header()]
 
 
-# =========================
-#   token extraction
-# =========================
 def get_access_token(authorization: AuthorizationHeader = None) -> str:
     """Extract Bearer token from Authorization header."""
     if not authorization:
@@ -36,9 +33,6 @@ def get_access_token(authorization: AuthorizationHeader = None) -> str:
     return token
 
 
-# =========================
-#   get auth user
-# =========================
 def get_current_user(
     token: Annotated[str, Depends(get_access_token)],
 ) -> AuthUser:
@@ -63,14 +57,11 @@ def get_current_user(
     return user
 
 
-# =========================
-#   admin check
-# =========================
 def require_admin(
     auth_user: Annotated[AuthUser, Depends(get_current_user)],
 ) -> AuthUser:
-    """Ensure user is admin using metadata (no DB call)."""
-    role = (auth_user.user_metadata or {}).get("role")
+    """Ensure user is admin using app_metadata (no DB call)."""
+    role = (auth_user.app_metadata or {}).get("role")
 
     if role != "admin":
         raise HTTPException(
@@ -79,4 +70,3 @@ def require_admin(
         )
 
     return auth_user
-

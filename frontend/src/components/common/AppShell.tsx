@@ -6,15 +6,17 @@ import type { Session } from "@supabase/supabase-js";
 
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import UserSidebar from "@/components/client/UserSidebar";
+import { ChangePasswordModal } from "@/components/common/ChangePasswordModal";
 import Footer from "@/components/common/Footer";
 import Navbar from "@/components/common/Navbar";
+import AppLoadingScreen from "@/components/common/AppLoadingScreen";
 import { UserStepProvider, useUserStep } from "@/contexts/UserStepContext";
 import {
   getCurrentSession,
   refreshCurrentSession,
   subscribeToAuthStateChange,
 } from "@/lib/auth";
-import AppLoadingScreen from "./AppLoadingScreen";
+import { Notification } from "@/components/ui/Notification";
 
 type AppShellProps = {
   children: ReactNode;
@@ -32,7 +34,7 @@ const USER_ALLOWED_ROUTES = new Set([
   "/dashboard",
   "/agreement",
   "/deposit-fees",
-  "/agreement/return"
+  "/agreement/return",
 ]);
 
 function isAllowedRoute(
@@ -109,6 +111,9 @@ export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [role, setRole] = useState<string | null>(null);
+  const [showPasswordNotice, setShowPasswordNotice] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [hasCheckedPassword, setHasCheckedPassword] = useState(false);
 
   const isPublicRoute = PUBLIC_ROUTES.has(pathname);
 
@@ -117,12 +122,15 @@ export default function AppShell({ children }: AppShellProps) {
 
     if (!currentSession) {
       setRole(null);
+      setHasCheckedPassword(false);
+      setShowPasswordNotice(false);
+      setShowPasswordModal(false);
       return;
     }
 
     const sessionRole =
-      typeof currentSession.user.user_metadata?.role === "string"
-        ? currentSession.user.user_metadata.role
+      typeof currentSession.user.app_metadata?.role === "string"
+        ? currentSession.user.app_metadata.role
         : null;
 
     setRole(sessionRole);
@@ -146,6 +154,9 @@ export default function AppShell({ children }: AppShellProps) {
         if (!mounted) return;
         setSession(null);
         setRole(null);
+        setHasCheckedPassword(false);
+        setShowPasswordNotice(false);
+        setShowPasswordModal(false);
       }
     }
 
@@ -196,6 +207,28 @@ export default function AppShell({ children }: AppShellProps) {
     };
   }, [isPublicRoute, syncAuth]);
 
+  useEffect(() => {
+    if (!session || hasCheckedPassword || isPublicRoute) return;
+
+    const passwordChanged =
+      session.user.app_metadata?.password_changed === true;
+
+    if (!passwordChanged) {
+      setShowPasswordNotice(true);
+    }
+
+    setHasCheckedPassword(true);
+  }, [session, hasCheckedPassword, isPublicRoute]);
+
+  function handlePasswordNoticeClose() {
+    setShowPasswordNotice(false);
+    setShowPasswordModal(true);
+  }
+
+  function handlePasswordModalClose() {
+    setShowPasswordModal(false);
+  }
+
   if (session === undefined) {
     return null;
   }
@@ -241,23 +274,38 @@ export default function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#F8F9FB] text-[#111827]">
-      <div className="flex min-h-dvh flex-1 flex-col items-stretch lg:flex-row">
-        {showAdminSidebar && <AdminSidebar />}
+    <>
+      <div className="flex min-h-dvh flex-col bg-[#F8F9FB] text-[#111827]">
+        <div className="flex min-h-dvh flex-1 flex-col items-stretch lg:flex-row">
+          {showAdminSidebar && <AdminSidebar />}
 
-        {showUserSidebar && (
-          <UserStepProvider>
-            <UserStepGuard pathname={pathname} />
-            <UserAppFrame pathname={pathname}>{children}</UserAppFrame>
-          </UserStepProvider>
-        )}
+          {showUserSidebar && (
+            <UserStepProvider>
+              <UserStepGuard pathname={pathname} />
+              <UserAppFrame pathname={pathname}>{children}</UserAppFrame>
+            </UserStepProvider>
+          )}
 
-        {!showUserSidebar && (
-          <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-            {children}
-          </main>
-        )}
+          {!showUserSidebar && (
+            <main className="flex min-h-0 min-w-0 flex-1 flex-col">
+              {children}
+            </main>
+          )}
+        </div>
       </div>
-    </div>
+
+      <Notification
+        open={showPasswordNotice}
+        onClose={handlePasswordNoticeClose}
+        variant="error"
+        title="Password change required"
+        message="For account security, please change your password before continuing."
+      />
+
+      <ChangePasswordModal
+        open={showPasswordModal}
+        onClose={handlePasswordModalClose}
+      />
+    </>
   );
 }

@@ -125,3 +125,50 @@ def send_confirmation_email(
             status_code=500,
             detail=f"Failed to send confirmation email: {str(e)}",
         ) from e
+
+
+def send_next_step_reminder_email(
+    *,
+    to_email: str,
+    first_name: str,
+    current_step: int | None,
+) -> None:
+    full_name = first_name.strip() or "User"
+
+    if current_step == 0:
+        subject = "Reminder: Please complete your agreement"
+        body = f"""
+Hello {full_name},
+
+This is a reminder that your next onboarding step is to complete the agreement.
+
+Please log in to your account and finish the agreement step to continue your onboarding process.
+
+Best regards,
+GBR Onboarding Team
+""".strip()
+
+    elif current_step == 1:
+        subject = "Reminder: Please complete your deposit fee"
+        body = f"""
+Hello {full_name},
+
+This is a reminder that your next onboarding step is to complete the deposit fee.
+
+Please log in to your account and finish this step to continue your onboarding process.
+
+Best regards,
+GBR Onboarding Team
+""".strip()
+
+    elif current_step == 2:
+        raise EmailSendError("User has already completed onboarding.")
+
+    else:
+        raise EmailSendError(f"Unsupported current_step value: {current_step}")
+
+    send_email(
+        to_email=to_email,
+        subject=subject,
+        body=body,
+    )

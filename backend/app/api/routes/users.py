@@ -38,6 +38,14 @@ def update_me(
     return user_service.update_my_account(auth_user, payload)
 
 
+@router.post("/me/password-changed", response_model=UserResponse)
+def mark_my_password_changed(
+    auth_user: Annotated[AuthUser, Depends(get_current_user)],
+    user_service: Annotated[UserService, Depends(get_users_service)],
+) -> UserResponse:
+    return user_service.mark_my_password_changed(auth_user.id)
+
+
 # -------------- Admin-only user management routes --------------
 
 @router.get("/", response_model=list[UserResponse])
@@ -95,3 +103,12 @@ def send_verification_email(
     user_service: Annotated[UserService, Depends(get_users_service)],
 ):
     return user_service.resend_verification_email_by_admin(user_id)
+
+
+@router.post("/{user_id}/send-reminder")
+def send_reminder_email(
+    user_id: str,
+    _admin_user: Annotated[AuthUser, Depends(require_admin)],
+    user_service: Annotated[UserService, Depends(get_users_service)],
+):
+    return user_service.send_next_step_reminder_by_admin(user_id)

@@ -38,7 +38,7 @@ type UserStepProviderProps = {
 function extractStepFromSession(
   session: Awaited<ReturnType<typeof getCurrentSession>>,
 ) {
-  const rawStep = session?.user.user_metadata?.current_step;
+  const rawStep = session?.user.app_metadata?.current_step;
 
   if (typeof rawStep === "number" && Number.isFinite(rawStep)) {
     return rawStep;
@@ -79,7 +79,7 @@ export function UserStepProvider({ children }: UserStepProviderProps) {
 
         if (!mounted || requestIdRef.current !== requestId) return;
 
-        const role = session?.user.user_metadata?.role;
+        const role = session?.user.app_metadata?.role;
         if (role !== "buyer" && role !== "seller") {
           setCurrentStep(0);
           setIsLoading(false);
@@ -101,7 +101,7 @@ export function UserStepProvider({ children }: UserStepProviderProps) {
     void syncCurrentStep();
 
     const unsubscribe = subscribeToAuthStateChange((session) => {
-      const role = session?.user.user_metadata?.role;
+      const role = session?.user.app_metadata?.role;
 
       if (role !== "buyer" && role !== "seller") {
         setCurrentStep(0);

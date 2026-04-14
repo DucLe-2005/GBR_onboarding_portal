@@ -1,5 +1,6 @@
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { apiRequest } from "./api";
 
 export type AuthStateListener = (
   session: Session | null
@@ -69,6 +70,19 @@ export async function updateAuthenticatedUserPassword(password: string) {
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  const session = await getCurrentSession();
+
+  const passwordChanged =
+    session?.user?.app_metadata?.password_changed === true;
+
+  if (!passwordChanged) {
+    await apiRequest("/users/me/password-changed", {
+      method: "POST",
+    });
+
+    await refreshCurrentSession();
   }
 }
 
