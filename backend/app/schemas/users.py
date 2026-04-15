@@ -49,3 +49,6 @@ class ForgotPasswordRequest(BaseModel):
 
 class ForgotPasswordResponse(BaseModel):
     message: str
+
+class CurrentStepResponse(BaseModel):
+    current_step: int

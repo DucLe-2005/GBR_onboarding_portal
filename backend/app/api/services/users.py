@@ -194,6 +194,31 @@ class UserService:
             "message": "If an account exists for that email, a password reset link has been sent."
         }
 
+
+    def get_my_current_step(
+        self,
+        user_id: str,
+    ) -> dict[str, int]:
+        """
+        Return the current user's onboarding step from the profile table.
+        """
+        profile = self.repo.get_my_user_profile(user_id)
+        raw_step = profile.get("current_step", 0)
+
+        if isinstance(raw_step, bool):
+            current_step = 0
+        elif isinstance(raw_step, int):
+            current_step = raw_step
+        elif isinstance(raw_step, str):
+            try:
+                current_step = int(raw_step)
+            except ValueError:
+                current_step = 0
+        else:
+            current_step = 0
+
+        return {"current_step": current_step}
+
     # =========================
     # admin flow
     # =========================

@@ -13,7 +13,8 @@ from app.schemas.users import (
     UpdateUserRequest,
     UserResponse,
     ForgotPasswordResponse,
-    ForgotPasswordRequest
+    ForgotPasswordRequest,
+    CurrentStepResponse,
 )
 from app.api.services.users import UserService, get_users_service
 
@@ -58,6 +59,13 @@ def mark_my_password_changed(
 ) -> UserResponse:
     return user_service.mark_my_password_changed(auth_user.id)
 
+
+@router.get("/me/current-step", response_model=CurrentStepResponse)
+def get_my_current_step(
+    auth_user: Annotated[AuthUser, Depends(get_current_user)],
+    user_service: Annotated[UserService, Depends(get_users_service)],
+) -> CurrentStepResponse:
+    return user_service.get_my_current_step(auth_user.id)
 
 # -------------- Admin-only user management routes --------------
 
