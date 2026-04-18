@@ -61,7 +61,7 @@ class QuickBooksAccountingService:
 
         try:
             # Create a QBO customer if we don't already have a customer_id for this user. We need a customer to create an invoice.
-            customer = await self.transaction_repo.get_latest_transaction_by_user_id(user_id)
+            customer = self.transaction_repo.get_latest_transaction_by_user_id(user_id)
             customer_id = customer.get("qbo_customer_id")
             if not customer_id:
                 customer_id =  await self._create_customer(connection=connection, payload=payload).get("Id"); 
@@ -81,6 +81,7 @@ class QuickBooksAccountingService:
             )
 
             # Get or create the service item for the invoice line. This is a sellable item in QBO that represents the service we're charging for.
+            item_name = "Brokerage Service Fee"
             service_item = await self._get_item_by_name(
                 connection=connection,
                 item_name=item_name,
