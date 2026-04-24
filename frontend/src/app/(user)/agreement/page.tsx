@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Notification } from "@/components/ui/Notification";
 import { useUserStep } from "@/contexts/UserStepContext";
+import { useAgreementSync } from "@/contexts/AgreementSyncContext";
 import { USER_STEP_ROUTES } from "@/lib/user-step";
 import { createRecipientView } from "@/service/docusign.service";
 
@@ -46,28 +47,36 @@ export default function AgreementPage() {
   const [isLoadingSigningUrl, setIsLoadingSigningUrl] = useState(false);
   const [signingError, setSigningError] = useState("");
   const [showSigningFrame, setShowSigningFrame] = useState(false);
-  const [isPollingStep, setIsPollingStep] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const [pollingAttempts, setPollingAttempts] = useState(0);
+
+  const { currentStep, isLoading: isStepLoading } = useUserStep();
 
   const {
-    currentStep,
-    isLoading: isStepLoading,
-    refreshCurrentStep,
-  } = useUserStep();
+    isAgreementSyncing,
+    pollingAttempts,
+    agreementSyncError,
+    shouldShowCompletionNotice,
+    startAgreementSync,
+    clearAgreementSyncError,
+    markCompletionNoticeShown,
+  } = useAgreementSync();
 
-  const isAgreementComplete = !isPollingStep && currentStep >= 1;
+  const isAgreementComplete = !isAgreementSyncing && currentStep >= 1;
 
   const showPostSigningWaitingScreen =
-  isPollingStep && !showSigningFrame && !isAgreementComplete;
+    isAgreementSyncing && !showSigningFrame && !isAgreementComplete;
+
+  const progressWidth = useMemo(
+    () => `${Math.min(((pollingAttempts + 1) / 30) * 100, 92)}%`,
+    [pollingAttempts],
+  );
 
   async function handleStartSigning() {
     try {
       setShowSigningFrame(true);
-      setIsPollingStep(true);
       setIsLoadingSigningUrl(true);
       setSigningError("");
-      setPollingAttempts(0);
+      clearAgreementSyncError();
 
       const response = await createRecipientView({
         return_url: `${window.location.origin}/agreement/return`,
@@ -76,7 +85,6 @@ export default function AgreementPage() {
       setSigningUrl(response.signing_url);
     } catch (error) {
       setShowSigningFrame(false);
-      setIsPollingStep(false);
       setSigningError(
         error instanceof Error
           ? error.message
@@ -90,54 +98,25 @@ export default function AgreementPage() {
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
       if (event.origin !== window.location.origin) return;
-  
       if (event.data?.type !== "DOCUSIGN_SIGNING_DONE") return;
-  
+
       setShowSigningFrame(false);
       setSigningUrl("");
       setSigningError("");
-      setPollingAttempts(0);
-      setIsPollingStep(true);
-  
-      void refreshCurrentStep();
+      startAgreementSync();
     }
-  
+
     window.addEventListener("message", handleMessage);
-  
     return () => window.removeEventListener("message", handleMessage);
-  }, [refreshCurrentStep]);
+  }, [startAgreementSync]);
 
   useEffect(() => {
-    if (!isPollingStep) return;
-
-    let attempts = 0;
-
-    const intervalId = window.setInterval(() => {
-      attempts += 1;
-      setPollingAttempts(attempts);
-      void refreshCurrentStep();
-
-      if (attempts >= 30) {
-        setIsPollingStep(false);
-        setSigningError(
-          "We’re still finalizing your signed agreement. Please wait a moment and refresh the page if needed.",
-        );
-      }
-    }, 1000);
-
-    return () => window.clearInterval(intervalId);
-  }, [isPollingStep, refreshCurrentStep]);
-
-  useEffect(() => {
-    if (!isPollingStep || isStepLoading || currentStep < 1) {
-      return;
-    }
+    if (!shouldShowCompletionNotice) return;
 
     setShowSigningFrame(false);
     setSigningUrl("");
-    setIsPollingStep(false);
     setNotificationOpen(true);
-  }, [currentStep, isPollingStep, isStepLoading]);
+  }, [shouldShowCompletionNotice]);
 
   return (
     <div className="min-h-dvh bg-[radial-gradient(circle_at_top_right,_rgba(201,166,91,0.08),_transparent_22%),linear-gradient(180deg,_#F8FAFD_0%,_#F4F7FB_100%)]">
@@ -145,6 +124,7 @@ export default function AgreementPage() {
         open={notificationOpen}
         onClose={() => {
           setNotificationOpen(false);
+          markCompletionNoticeShown();
         }}
         variant="success"
         title="Agreement Completed"
@@ -283,26 +263,14 @@ export default function AgreementPage() {
                   <div className="mt-8 overflow-hidden rounded-full bg-[#E9EEF5]">
                     <div
                       className="h-2 rounded-full bg-[#C9A65B] transition-all duration-500"
-                      style={{
-                        width: `${Math.min(((pollingAttempts + 1) / 30) * 100, 92)}%`,
-                      }}
+                      style={{ width: progressWidth }}
                     />
                   </div>
 
                   <p className="mt-3 text-sm text-[#7A879C]">
-                    This usually takes just a few seconds.
+                    First check starts after 4 seconds, then we retry every 2 seconds.
                   </p>
                 </div>
-              </div>
-            ) : null}
-
-            {!showPostSigningWaitingScreen && isPollingStep ? (
-              <div className="mb-4 flex items-center gap-3 rounded-[18px] border border-[#E6D4A4] bg-[#FFF9ED] px-4 py-3 text-sm text-[#7A5B14]">
-                <LoaderCircle className="h-4 w-4 animate-spin" strokeWidth={2} />
-                <p>
-                  Waiting for DocuSign confirmation. We are checking your current
-                  onboarding step every 2 seconds.
-                </p>
               </div>
             ) : null}
 
@@ -403,6 +371,14 @@ export default function AgreementPage() {
               <div className="mt-4 rounded-[18px] border border-red-200 bg-red-50 px-4 py-3">
                 <p className="text-sm font-medium text-[#B42318]">
                   {signingError}
+                </p>
+              </div>
+            ) : null}
+
+            {agreementSyncError ? (
+              <div className="mt-4 rounded-[18px] border border-red-200 bg-red-50 px-4 py-3">
+                <p className="text-sm font-medium text-[#B42318]">
+                  {agreementSyncError}
                 </p>
               </div>
             ) : null}

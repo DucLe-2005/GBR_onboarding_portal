@@ -2,6 +2,7 @@ import { apiRequest } from "@/lib/api";
 import type {
   CreateUserPayload,
   CreateUserResponse,
+  CurrentStepResponse,
   UpdateUserPayload,
   User,
 } from "@/types/user";
@@ -11,11 +12,9 @@ export function getCurrentUserProfile() {
 }
 
 export async function getCurrentUserStep() {
-  const response = await apiRequest<{ step: number}>(
-    "/users/current-step",
-  );
-
-  return response.step;
+  return apiRequest<CurrentStepResponse>("/users/me/current-step", {
+    method: "GET",
+  });
 }
 
 export function updateCurrentUserProfile(payload: UpdateUserPayload) {
@@ -26,11 +25,11 @@ export function updateCurrentUserProfile(payload: UpdateUserPayload) {
 }
 
 export function getUsers() {
-  return apiRequest<User[]>("/users/");
+  return apiRequest<User[]>("/users");
 }
 
 export function createUser(payload: CreateUserPayload) {
-  return apiRequest<CreateUserResponse>("/users/", {
+  return apiRequest<CreateUserResponse>("/users", {
     method: "POST",
     body: payload,
   });

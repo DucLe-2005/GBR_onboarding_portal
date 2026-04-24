@@ -12,6 +12,10 @@ import Navbar from "@/components/common/Navbar";
 import AppLoadingScreen from "@/components/common/AppLoadingScreen";
 import { UserStepProvider, useUserStep } from "@/contexts/UserStepContext";
 import {
+  AgreementSyncProvider,
+  useAgreementSync,
+} from "@/contexts/AgreementSyncContext";
+import {
   getCurrentSession,
   refreshCurrentSession,
   subscribeToAuthStateChange,
@@ -25,13 +29,17 @@ type AppShellProps = {
 const PUBLIC_ROUTES = new Set([
   "/login",
   "/forgot-password",
+]);
+
+const ADMIN_ALLOWED_ROUTES = new Set([
+  "/admin/create",
+  "/admin/clients",
   "/auth/reset-password",
 ]);
 
-const ADMIN_ALLOWED_ROUTES = new Set(["/admin/create", "/admin/clients"]);
-
 const USER_ALLOWED_ROUTES = new Set([
   "/dashboard",
+  "/auth/reset-password",
   "/agreement",
   "/deposit-fees",
   "/agreement/return",
@@ -108,6 +116,45 @@ function UserAppFrame({
   );
 }
 
+function UserShell({
+  pathname,
+  children,
+}: {
+  pathname: string;
+  children: ReactNode;
+}) {
+  const { isAgreementSyncing } = useAgreementSync();
+
+  useEffect(() => {
+    function handleFocus() {
+      if (isAgreementSyncing) return;
+      void refreshCurrentSession();
+    }
+
+    function handleVisibilityChange() {
+      if (isAgreementSyncing) return;
+      if (document.visibilityState === "visible") {
+        void refreshCurrentSession();
+      }
+    }
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isAgreementSyncing]);
+
+  return (
+    <>
+      <UserStepGuard pathname={pathname} />
+      <UserAppFrame pathname={pathname}>{children}</UserAppFrame>
+    </>
+  );
+}
+
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const [session, setSession] = useState<Session | null | undefined>(undefined);
@@ -161,52 +208,17 @@ export default function AppShell({ children }: AppShellProps) {
       }
     }
 
-    async function refreshAndSyncIfNeeded() {
-      try {
-        const currentSession = await getCurrentSession();
-
-        if (!mounted) return;
-
-        if (!currentSession) {
-          safeSync(null);
-          return;
-        }
-
-        const refreshedSession = await refreshCurrentSession();
-        safeSync(refreshedSession);
-      } catch (error) {
-        console.error("Failed to refresh session:", error);
-      }
-    }
-
     void initializeSession();
 
     const unsubscribe = subscribeToAuthStateChange((newSession) => {
       safeSync(newSession);
     });
 
-    function handleFocus() {
-      if (isPublicRoute) return;
-      void refreshAndSyncIfNeeded();
-    }
-
-    function handleVisibilityChange() {
-      if (isPublicRoute) return;
-      if (document.visibilityState === "visible") {
-        void refreshAndSyncIfNeeded();
-      }
-    }
-
-    window.addEventListener("focus", handleFocus);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
     return () => {
       mounted = false;
       unsubscribe();
-      window.removeEventListener("focus", handleFocus);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [isPublicRoute, syncAuth]);
+  }, [syncAuth]);
 
   useEffect(() => {
     if (!session || hasCheckedPassword || isPublicRoute) return;
@@ -282,8 +294,9 @@ export default function AppShell({ children }: AppShellProps) {
 
           {showUserSidebar && (
             <UserStepProvider>
-              <UserStepGuard pathname={pathname} />
-              <UserAppFrame pathname={pathname}>{children}</UserAppFrame>
+              <AgreementSyncProvider>
+                <UserShell pathname={pathname}>{children}</UserShell>
+              </AgreementSyncProvider>
             </UserStepProvider>
           )}
 

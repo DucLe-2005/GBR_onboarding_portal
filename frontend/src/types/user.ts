@@ -34,3 +34,7 @@ export type CreateUserResponse = {
   user_id: string;
   created_by: string;
 };
+
+export type CurrentStepResponse = {
+  current_step: number;
+};

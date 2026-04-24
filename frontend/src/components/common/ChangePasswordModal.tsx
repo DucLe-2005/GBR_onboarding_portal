@@ -15,7 +15,10 @@ export type ChangePasswordModalProps = {
   onClose: () => void;
 };
 
-export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps) {
+export function ChangePasswordModal({
+  open,
+  onClose,
+}: ChangePasswordModalProps) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -29,16 +32,17 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
     setPassword("");
     setConfirm("");
     setNotice(null);
+    setSubmitting(false);
   }, [open]);
 
   const handleNoticeClose = useCallback(() => {
-    let wasSuccess = false;
-    setNotice((prev) => {
-      wasSuccess = prev?.variant === "success";
-      return null;
-    });
-    if (wasSuccess) onClose();
-  }, [onClose]);
+    const isSuccess = notice?.variant === "success";
+    setNotice(null);
+
+    if (isSuccess) {
+      onClose();
+    }
+  }, [notice, onClose]);
 
   useEffect(() => {
     if (!open || notice) return;
@@ -56,6 +60,7 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
 
     const p = password.trim();
     const c = confirm.trim();
+
     if (!p || !c) {
       setNotice({
         variant: "error",
@@ -63,6 +68,7 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
       });
       return;
     }
+
     if (p !== c) {
       setNotice({
         variant: "error",
@@ -72,6 +78,7 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
     }
 
     setSubmitting(true);
+
     try {
       await updateAuthenticatedUserPassword(p);
       setNotice({
@@ -91,17 +98,19 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
 
   if (!open) return null;
 
+  if (notice) {
+    return (
+      <Notification
+        open
+        variant={notice.variant}
+        message={notice.message}
+        onClose={handleNoticeClose}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {notice ? (
-        <Notification
-          open
-          variant={notice.variant}
-          message={notice.message}
-          onClose={handleNoticeClose}
-        />
-      ) : null}
-
       <button
         type="button"
         className="absolute inset-0 cursor-pointer bg-[#071633]/50 backdrop-blur-[2px]"
@@ -149,6 +158,7 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
                 />
               </div>
             </div>
+
             <div>
               <label
                 htmlFor="confirm-password"
