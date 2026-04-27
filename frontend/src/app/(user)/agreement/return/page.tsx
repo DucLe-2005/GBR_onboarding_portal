@@ -12,7 +12,7 @@ export default function AgreementReturnPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-white">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E7D3A1] border-t-[#0B1630]" />
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--border)] border-t-[var(--accent)]" />
     </div>
   );
 }

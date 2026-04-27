@@ -134,7 +134,7 @@ export function RouteProgressProvider({ children }: { children: ReactNode }) {
         {isActive ? (
           <div className="relative h-full overflow-hidden bg-[#E8D8AE]/65">
             <div
-              className={`absolute inset-y-0 rounded-full bg-[#C9A65B] ${
+              className={`absolute inset-y-0 rounded-full bg-[var(--accent)] ${
                 isCompleting
                   ? "route-progress-bar-complete"
                   : "route-progress-bar-indeterminate"

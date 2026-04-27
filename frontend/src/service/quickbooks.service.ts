@@ -4,10 +4,11 @@ import { apiRequest } from "@/lib/api";
 
 export type CreateInvoicePayload = {
   amount: number;
-  txn_date?: string;
-  due_date?: string;
-  customer_memo?: string;
-  private_note?: string;
+  txn_date: string;
+  due_date: string;
+  customer_memo: string;
+  private_note: string;
+  doc_number?: string;
 };
 
 export type CreateInvoiceResponse = {
@@ -15,7 +16,6 @@ export type CreateInvoiceResponse = {
   invoice_id: string;
   bill_email: string;
   email_sent: boolean;
-  send_result: Record<string, unknown>;
   invoice: Record<string, unknown>;
 };
 

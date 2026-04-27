@@ -16,6 +16,10 @@ import { createInvoice } from "@/service/quickbooks.service";
 
 const DEPOSIT_FEE_AMOUNT = 5000;
 
+function formatDateForQbo(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
 export default function DepositFeesPage() {
   const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
   const [billEmail, setBillEmail] = useState("");
@@ -29,8 +33,14 @@ export default function DepositFeesPage() {
       setErrorMessage("");
       routeProgress.start({ minDurationMs: 1100 });
 
+      const txnDate = new Date();
+      const dueDate = new Date(txnDate);
+      dueDate.setDate(dueDate.getDate() + 7);
+
       const response = await createInvoice({
         amount: DEPOSIT_FEE_AMOUNT,
+        txn_date: formatDateForQbo(txnDate),
+        due_date: formatDateForQbo(dueDate),
         customer_memo: "Initial deposit fee invoice",
         private_note: "Created from the deposit fee onboarding page.",
       });
@@ -51,7 +61,7 @@ export default function DepositFeesPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-[radial-gradient(circle_at_top_right,_rgba(201,166,91,0.08),_transparent_22%),linear-gradient(180deg,_#F8FAFD_0%,_#F4F7FB_100%)]">
+    <div className="app-page flex flex-1 flex-col">
       <Notification
         open={notificationOpen}
         onClose={() => setNotificationOpen(false)}
@@ -60,46 +70,46 @@ export default function DepositFeesPage() {
         message={`Your QuickBooks invoice has been created and emailed${billEmail ? ` to ${billEmail}` : ""}. Please check your inbox for the payment link.`}
       />
 
-      <div className="border-b border-[#DDE5F0] bg-white/92 px-5 py-3 shadow-[0_2px_14px_rgba(10,17,32,0.05)] backdrop-blur sm:px-6 lg:px-10">
+      <div className="border-b border-[var(--border)] bg-white px-5 py-3 sm:px-6 lg:px-10">
         <div className="flex items-center justify-end">
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-full border border-[#223250] bg-[#0B1630] px-3 py-2 text-sm font-semibold text-[#F5E6B8] shadow-[0_10px_24px_rgba(11,22,48,0.18)] transition hover:brightness-105"
+            className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--surface-muted)]"
           >
-            <UserCircle2 className="h-5 w-5" strokeWidth={1.75} />
-            <CalendarDays className="h-4 w-4" strokeWidth={1.75} />
+            <UserCircle2 className="h-5 w-5 text-[var(--accent)]" strokeWidth={1.75} />
+            <CalendarDays className="h-4 w-4 text-[var(--text-muted)]" strokeWidth={1.75} />
             <span>Book Strategy Session</span>
           </button>
         </div>
       </div>
 
-      <section className="mx-auto w-full max-w-5xl px-5 py-8 sm:px-6 lg:px-10 lg:py-9">
-        <div className="mb-6 flex items-center gap-3 border-b border-[#E0E7F0] pb-5">
+      <section className="app-container max-w-5xl">
+        <div className="mb-6 flex items-center gap-3 border-b border-[var(--border)] pb-5">
           <Link
             href="/dashboard"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#6D7E99] transition hover:bg-white hover:text-[#14213D]"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-[var(--text-muted)] transition hover:bg-white hover:text-[var(--ink)]"
             aria-label="Back to dashboard"
           >
             <ArrowLeft className="h-5 w-5" strokeWidth={2.25} />
           </Link>
-          <h1 className="text-[clamp(2rem,3.4vw,3rem)] font-semibold tracking-[-0.03em] text-[#14213D] [font-family:Georgia,serif]">
+          <h1 className="text-3xl font-semibold text-[var(--ink)]">
             Deposit Fee
           </h1>
         </div>
 
-        <div className="rounded-[26px] border border-[#DFE6F0] bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:p-8">
+        <div className="panel p-6 sm:p-8">
           <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#0B1630] text-white">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[var(--accent)] text-white">
               <CircleDollarSign className="h-7 w-7" strokeWidth={1.8} />
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#B8851C]">
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[var(--accent-dark)]">
                 Step 2
               </p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[#14213D]">
+              <h2 className="mt-2 text-3xl font-semibold text-[var(--ink)]">
                 Retainer payment is now available
               </h2>
-              <p className="mt-3 max-w-2xl text-base leading-7 text-[#657793]">
+              <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--text-muted)]">
                 Your agreement has been completed successfully. Send your
                 $5,000 QuickBooks deposit invoice email from this page to continue the
                 payment workflow.
@@ -107,8 +117,8 @@ export default function DepositFeesPage() {
             </div>
           </div>
 
-          <div className="mt-8 rounded-[22px] border border-dashed border-[#D8E0EC] bg-[#F8FAFD] p-6">
-            <p className="text-base leading-7 text-[#5D6F8B]">
+          <div className="mt-8 rounded-lg border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] p-6">
+            <p className="text-base leading-7 text-[var(--text-muted)]">
               This screen creates the QuickBooks invoice for the logged-in user
               and immediately asks QuickBooks to send the invoice email to the
               billing email on file.
@@ -119,7 +129,7 @@ export default function DepositFeesPage() {
                 type="button"
                 disabled={isCreatingInvoice}
                 onClick={() => void handleCreateInvoice()}
-                className="h-12 rounded-2xl px-5"
+                className="px-5"
               >
                 {isCreatingInvoice ? "Sending Payment Email..." : "Send Payment Email"}
               </Button>
@@ -134,17 +144,17 @@ export default function DepositFeesPage() {
             ) : null}
           </div>
 
-          <div className="mt-6 rounded-[22px] border border-[#E7ECF3] bg-white p-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#B8851C]">
+          <div className="mt-6 rounded-lg border border-[var(--border)] bg-white p-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[var(--accent-dark)]">
               Invoice Summary
             </p>
             <div className="mt-3 flex items-center justify-between gap-4">
-              <p className="text-base text-[#5D6F8B]">Deposit fee amount</p>
-              <p className="text-2xl font-semibold tracking-[-0.03em] text-[#14213D]">
+              <p className="text-base text-[var(--text-muted)]">Deposit fee amount</p>
+              <p className="text-2xl font-semibold text-[var(--ink)]">
                 $5,000
               </p>
             </div>
-            <p className="mt-3 text-sm leading-6 text-[#7A879C]">
+            <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">
               Clicking Send Payment Email creates the QuickBooks invoice and
               asks QuickBooks to email it to the billing address. Webhooks still
               sync the transaction record using the stored QuickBooks invoice ID.

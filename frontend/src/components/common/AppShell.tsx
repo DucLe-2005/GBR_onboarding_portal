@@ -9,6 +9,7 @@ import UserSidebar from "@/components/client/UserSidebar";
 import { ChangePasswordModal } from "@/components/common/ChangePasswordModal";
 import Footer from "@/components/common/Footer";
 import Navbar from "@/components/common/Navbar";
+import AppTopbar from "@/components/common/AppTopbar";
 import AppLoadingScreen from "@/components/common/AppLoadingScreen";
 import { UserStepProvider, useUserStep } from "@/contexts/UserStepContext";
 import {
@@ -100,6 +101,7 @@ function UserAppFrame({
     <>
       <UserSidebar />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:min-h-dvh">
+        <AppTopbar role="client" />
         {isLoading ? (
           <AppLoadingScreen
             title="Loading your progress"
@@ -223,14 +225,18 @@ export default function AppShell({ children }: AppShellProps) {
   useEffect(() => {
     if (!session || hasCheckedPassword || isPublicRoute) return;
 
-    const passwordChanged =
-      session.user.app_metadata?.password_changed === true;
+    const timeoutId = window.setTimeout(() => {
+      const passwordChanged =
+        session.user.app_metadata?.password_changed === true;
 
-    if (!passwordChanged) {
-      setShowPasswordNotice(true);
-    }
+      if (!passwordChanged) {
+        setShowPasswordNotice(true);
+      }
 
-    setHasCheckedPassword(true);
+      setHasCheckedPassword(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [session, hasCheckedPassword, isPublicRoute]);
 
   function handlePasswordNoticeClose() {
@@ -242,16 +248,26 @@ export default function AppShell({ children }: AppShellProps) {
     setShowPasswordModal(false);
   }
 
+  if (session && isPublicRoute) {
+    redirect(getDefaultRouteForRole(role));
+  }
+
+  if (isPublicRoute) {
+    return (
+      <div className="flex min-h-dvh flex-col bg-[var(--background)] text-[var(--ink)]">
+        <Navbar />
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</main>
+        <Footer />
+      </div>
+    );
+  }
+
   if (session === undefined) {
     return null;
   }
 
-  if (!session && !isPublicRoute) {
+  if (!session) {
     redirect("/login");
-  }
-
-  if (session && isPublicRoute) {
-    redirect(getDefaultRouteForRole(role));
   }
 
   const isAdmin = role === "admin";
@@ -276,19 +292,9 @@ export default function AppShell({ children }: AppShellProps) {
   const showAdminSidebar = isAdmin;
   const showUserSidebar = isUser;
 
-  if (isPublicRoute) {
-    return (
-      <div className="flex min-h-dvh flex-col bg-[#f3f4f6] text-[#111827]">
-        <Navbar />
-        <main className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</main>
-        <Footer />
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="flex min-h-dvh flex-col bg-[#F8F9FB] text-[#111827]">
+      <div className="flex min-h-dvh flex-col bg-[var(--background)] text-[var(--ink)]">
         <div className="flex min-h-0 flex-1 flex-col items-stretch lg:min-h-dvh lg:flex-row">
           {showAdminSidebar && <AdminSidebar />}
 
@@ -302,6 +308,7 @@ export default function AppShell({ children }: AppShellProps) {
 
           {!showUserSidebar && (
             <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:min-h-dvh">
+              <AppTopbar role={showAdminSidebar ? "admin" : "default"} />
               <main className="flex min-h-0 min-w-0 flex-1 flex-col">
                 {children}
               </main>

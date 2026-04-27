@@ -1,0 +1,9 @@
+<svg width="293" height="83" viewBox="0 0 293 83" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title id="title">God Bless Retirement</title>
+  <rect width="293" height="83" fill="#052B46"/>
+  <rect x="23" y="14" width="52" height="52" stroke="white" stroke-width="1.5"/>
+  <text x="25" y="67" fill="white" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="700" letter-spacing="1.5">GBR</text>
+  <line x1="92" y1="14" x2="92" y2="67" stroke="white" stroke-width="1.5"/>
+  <text x="105" y="35" fill="white" font-family="Georgia, 'Times New Roman', serif" font-size="30" letter-spacing="1.8">GOD BLESS</text>
+  <text x="105" y="67" fill="white" font-family="Georgia, 'Times New Roman', serif" font-size="30" letter-spacing="1.8">RETIREMENT</text>
+</svg>

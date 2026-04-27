@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { UserPlus, X } from "lucide-react";
 
+import CreateUserForm from "@/components/admin/CreateUserForm";
 import ClientTableRow from "@/components/admin/ClientTableRow";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +36,7 @@ export default function AdminClientsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
   const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
 
@@ -51,22 +54,22 @@ export default function AdminClientsPage() {
     Record<string, string>
   >({});
 
-  useEffect(() => {
-    async function loadClients() {
-      try {
-        setIsLoading(true);
-        setError(null);
+  async function loadClients() {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        const data = await getUsers();
-        setUsers(data);
-      } catch (err) {
-        console.error("Failed to load clients:", err);
-        setError("Failed to load clients.");
-      } finally {
-        setIsLoading(false);
-      }
+      const data = await getUsers();
+      setUsers(data);
+    } catch (err) {
+      console.error("Failed to load clients:", err);
+      setError("Failed to load clients.");
+    } finally {
+      setIsLoading(false);
     }
+  }
 
+  useEffect(() => {
     void loadClients();
   }, []);
 
@@ -173,63 +176,77 @@ export default function AdminClientsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-10">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 px-6 py-8 text-white lg:px-8">
-            <h1 className="text-3xl font-semibold">Client Dashboard</h1>
-            <p className="mt-2 text-sm text-slate-200">
-              Monitor onboarding progress and manage client accounts.
-            </p>
+    <div className="app-page min-h-screen">
+      <div className="app-container max-w-7xl space-y-6">
+        <section className="panel">
+          <div className="flex flex-col gap-4 px-6 py-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[var(--accent-dark)]">
+                Admin workspace
+              </p>
+              <h1 className="mt-2 text-3xl font-semibold text-[var(--ink)]">Client Dashboard</h1>
+              <p className="mt-2 text-sm text-[var(--text-muted)]">
+                Monitor onboarding progress and manage client accounts.
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              onClick={() => setIsCreateUserModalOpen(true)}
+              className="w-full gap-2 lg:w-auto"
+            >
+              <UserPlus className="h-4 w-4" />
+              Create User
+            </Button>
           </div>
         </section>
 
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="rounded-2xl border border-[#E5C07B] bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-[#B8962E]">All Clients</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">
+          <div className="panel p-5">
+            <p className="text-sm font-medium text-[var(--text-muted)]">All Clients</p>
+            <p className="mt-2 text-3xl font-semibold text-[var(--ink)]">
               {clients.length}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-orange-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-orange-700">Verified</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">
+          <div className="panel p-5">
+            <p className="text-sm font-medium text-[var(--text-muted)]">Verified</p>
+            <p className="mt-2 text-3xl font-semibold text-[var(--ink)]">
               {verifiedCount}
             </p>
-            <p className="mt-1 text-sm font-medium text-orange-700">
+            <p className="mt-1 text-sm font-medium text-[var(--accent-dark)]">
               Email confirmed
             </p>
           </div>
 
-          <div className="rounded-2xl border border-blue-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-blue-700">Agreement</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">
+          <div className="panel p-5">
+            <p className="text-sm font-medium text-[var(--text-muted)]">Agreement</p>
+            <p className="mt-2 text-3xl font-semibold text-[var(--ink)]">
               {agreementCount}
             </p>
-            <p className="mt-1 text-sm font-medium text-blue-700">Step 0</p>
+            <p className="mt-1 text-sm font-medium text-[var(--text-muted)]">Step 0</p>
           </div>
 
-          <div className="rounded-2xl border border-purple-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-purple-700">Deposit Fee</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">
+          <div className="panel p-5">
+            <p className="text-sm font-medium text-[var(--text-muted)]">Deposit Fee</p>
+            <p className="mt-2 text-3xl font-semibold text-[var(--ink)]">
               {depositCount}
             </p>
-            <p className="mt-1 text-sm font-medium text-purple-700">Step 1</p>
+            <p className="mt-1 text-sm font-medium text-[var(--text-muted)]">Step 1</p>
           </div>
 
-          <div className="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-emerald-700">Completed</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">
+          <div className="panel p-5">
+            <p className="text-sm font-medium text-[var(--text-muted)]">Completed</p>
+            <p className="mt-2 text-3xl font-semibold text-[var(--ink)]">
               {completedCount}
             </p>
-            <p className="mt-1 text-sm font-medium text-emerald-700">Step 2</p>
+            <p className="mt-1 text-sm font-medium text-[var(--accent-dark)]">Step 2</p>
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-6 py-5">
-            <h2 className="text-xl font-semibold text-slate-900">
+        <section className="panel overflow-hidden">
+          <div className="panel-header">
+            <h2 className="text-xl font-semibold text-[var(--ink)]">
               Client Accounts
             </h2>
           </div>
@@ -249,8 +266,8 @@ export default function AdminClientsPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full text-left">
-                <thead className="bg-slate-50">
-                  <tr className="text-sm text-slate-600">
+                <thead className="bg-[var(--surface-muted)]">
+                  <tr className="text-sm text-[var(--text-muted)]">
                     <th className="px-6 py-4 font-semibold">User Name</th>
                     <th className="px-6 py-4 font-semibold">Role</th>
                     <th className="px-6 py-4 font-semibold">Current Step</th>
@@ -259,7 +276,7 @@ export default function AdminClientsPage() {
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[var(--border)]">
                   {clients.map((user) => (
                     <ClientTableRow
                       key={user.id}
@@ -284,6 +301,28 @@ export default function AdminClientsPage() {
           )}
         </section>
       </div>
+
+      {isCreateUserModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6">
+          <div className="relative max-h-[90dvh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl">
+            <button
+              type="button"
+              onClick={() => setIsCreateUserModalOpen(false)}
+              className="absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded border border-[var(--border)] bg-white text-[var(--ink)] transition hover:bg-[var(--surface-muted)]"
+              aria-label="Close create user modal"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <CreateUserForm
+              onCreated={() => {
+                setIsCreateUserModalOpen(false);
+                void loadClients();
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
 
       {isVerificationModalOpen && selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">

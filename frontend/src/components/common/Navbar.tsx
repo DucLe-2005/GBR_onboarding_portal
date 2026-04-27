@@ -5,31 +5,22 @@ import Link from "next/link";
 
 export default function Navbar() {
   return (
-    <header className="w-full bg-[#081632] text-white">
-      <div className="mx-auto flex h-16 max-w-screen-xl items-center justify-between px-6">
+    <header className="w-full border-b border-[#0b3d61] bg-[#052b46] text-white">
+      <div className="mx-auto flex h-[70px] max-w-screen-xl items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-3">
-          <div className="relative h-8 w-8">
+          <div className="relative h-[50px] w-[176px]">
             <Image
-              src="/logo.png"
-              sizes="32px"
+              src="/logo.avif"
+              sizes="176px"
               alt="GodBless Retirement logo"
               fill
-              className="object-contain"
+              className="object-contain object-left"
               priority
             />
           </div>
-
-          <div className="leading-tight">
-            <p className="text-[15px] font-semibold tracking-tight">
-              GodBless Retirement
-            </p>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-[#C9A65B]">
-              Onboarding Portal
-            </p>
-          </div>
         </Link>
 
-        <div className="text-sm font-medium text-gray-200">
+        <div className="text-sm font-medium text-[#c6e5f5]">
           Secure Client Access
         </div>
       </div>

@@ -49,7 +49,7 @@ export default function AgreementPage() {
   const [showSigningFrame, setShowSigningFrame] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
 
-  const { currentStep, isLoading: isStepLoading } = useUserStep();
+  const { currentStep } = useUserStep();
 
   const {
     isAgreementSyncing,
@@ -119,7 +119,7 @@ export default function AgreementPage() {
   }, [shouldShowCompletionNotice]);
 
   return (
-    <div className="min-h-dvh bg-[radial-gradient(circle_at_top_right,_rgba(201,166,91,0.08),_transparent_22%),linear-gradient(180deg,_#F8FAFD_0%,_#F4F7FB_100%)]">
+    <div className="app-page min-h-dvh">
       <Notification
         open={notificationOpen}
         onClose={() => {
@@ -131,47 +131,47 @@ export default function AgreementPage() {
         message="Your signed agreement has been received. The next step is now unlocked."
       />
 
-      <div className="border-b border-[#DDE5F0] bg-white/92 px-5 py-3 shadow-[0_2px_14px_rgba(10,17,32,0.05)] backdrop-blur sm:px-6 lg:px-10">
+      <div className="border-b border-[var(--border)] bg-white px-5 py-3 sm:px-6 lg:px-10">
         <div className="flex items-center justify-end">
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-full border border-[#223250] bg-[#0B1630] px-3 py-2 text-sm font-semibold text-[#F5E6B8] shadow-[0_10px_24px_rgba(11,22,48,0.18)] transition hover:brightness-105"
+            className="inline-flex items-center gap-2 rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--surface-muted)]"
           >
-            <UserCircle2 className="h-5 w-5" strokeWidth={1.75} />
-            <CalendarDays className="h-4 w-4" strokeWidth={1.75} />
+            <UserCircle2 className="h-5 w-5 text-[var(--accent)]" strokeWidth={1.75} />
+            <CalendarDays className="h-4 w-4 text-[var(--text-muted)]" strokeWidth={1.75} />
             <span>Book Strategy Session</span>
           </button>
         </div>
       </div>
 
-      <section className="mx-auto w-full max-w-5xl px-5 py-8 sm:px-6 lg:px-10 lg:py-7">
-        <div className="mb-6 flex items-center gap-3 border-b border-[#E0E7F0] pb-5">
+      <section className="app-container max-w-5xl">
+        <div className="mb-6 flex items-center gap-3 border-b border-[var(--border)] pb-5">
           <Link
             href="/dashboard"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#6D7E99] transition hover:bg-white hover:text-[#14213D]"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-[var(--text-muted)] transition hover:bg-white hover:text-[var(--ink)]"
             aria-label="Back to dashboard"
           >
             <ArrowLeft className="h-5 w-5" strokeWidth={2.25} />
           </Link>
-          <h1 className="text-[clamp(2rem,3.4vw,3rem)] font-semibold tracking-[-0.03em] text-[#14213D] [font-family:Georgia,serif]">
+          <h1 className="text-3xl font-semibold text-[var(--ink)]">
             Buyer&apos;s Exclusive Representation Agreement
           </h1>
         </div>
 
-        <div className="overflow-hidden rounded-[26px] border border-[#DFE6F0] bg-white shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
-          <div className="bg-[#FBFCFE] px-4 py-5 sm:px-5">
+        <div className="panel overflow-hidden">
+          <div className="bg-white px-4 py-5 sm:px-5">
             {isAgreementComplete ? (
-              <div className="rounded-[22px] border border-[#E7D3A1] bg-[linear-gradient(135deg,_#FFFDF7_0%,_#FFF7E4_100%)] p-5 sm:p-6">
+              <div className="rounded-lg border border-[#a8c8dc] bg-[#edf7fc] p-5 sm:p-6">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch lg:justify-between">
                   <div className="flex items-start gap-4">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#0B1630] text-[#F5E6B8] shadow-[0_14px_30px_rgba(11,22,48,0.16)]">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[var(--accent)] text-white">
                       <CheckCircle2 className="h-7 w-7" strokeWidth={1.9} />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#B8851C]">
+                      <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[var(--accent-dark)]">
                         Step 1 Complete
                       </p>
-                      <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[#14213D] sm:text-[1.9rem]">
+                      <h2 className="mt-2 text-2xl font-semibold text-[var(--ink)] sm:text-[1.9rem]">
                         Your agreement has already been signed
                       </h2>
                       <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6B7C97] sm:text-[0.95rem]">
@@ -181,10 +181,10 @@ export default function AgreementPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-[22px] border border-[#F0D79A] bg-white px-6 py-6 shadow-[0_16px_34px_rgba(20,33,61,0.10)]">
+                  <div className="rounded-lg border border-[var(--border)] bg-white px-6 py-6">
                     <div className="flex items-center gap-3">
                       <ShieldCheck
-                        className="h-6 w-6 text-[#B8851C]"
+                        className="h-6 w-6 text-[var(--accent)]"
                         strokeWidth={2}
                       />
                       <p className="text-base font-semibold text-[#223250] sm:text-lg">
@@ -207,9 +207,9 @@ export default function AgreementPage() {
             ) : null}
 
             {showPostSigningWaitingScreen ? (
-              <div className="rounded-[22px] border border-[#E7D3A1] bg-[linear-gradient(135deg,_#FFFDF7_0%,_#FFF8EA_55%,_#FFFFFF_100%)] px-6 py-10 sm:px-10 sm:py-14">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-6 py-10 sm:px-10 sm:py-14">
                 <div className="mx-auto max-w-2xl text-center">
-                  <div className="mx-auto flex h-18 w-18 items-center justify-center rounded-full bg-[#0B1630] text-[#F5E6B8] shadow-[0_18px_40px_rgba(11,22,48,0.18)]">
+                  <div className="mx-auto flex h-18 w-18 items-center justify-center rounded-md bg-[var(--accent)] text-white">
                     <LoaderCircle className="h-8 w-8 animate-spin" strokeWidth={2} />
                   </div>
 
@@ -218,7 +218,7 @@ export default function AgreementPage() {
                     Finalizing your signed agreement
                   </div>
 
-                  <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-[#14213D]">
+                  <h2 className="mt-5 text-3xl font-semibold text-[var(--ink)]">
                     Please hold on while we update your account
                   </h2>
 
@@ -229,7 +229,7 @@ export default function AgreementPage() {
                   </p>
 
                   <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                    <div className="rounded-[18px] border border-[#E7ECF3] bg-white p-4 text-left shadow-sm">
+                    <div className="rounded-lg border border-[var(--border)] bg-white p-4 text-left">
                       <p className="text-sm font-semibold text-[#223250]">
                         Signature received
                       </p>
@@ -238,9 +238,9 @@ export default function AgreementPage() {
                       </p>
                     </div>
 
-                    <div className="rounded-[18px] border border-[#E7ECF3] bg-white p-4 text-left shadow-sm">
+                    <div className="rounded-lg border border-[var(--border)] bg-white p-4 text-left">
                       <div className="flex items-center gap-2">
-                        <Clock3 className="h-4 w-4 text-[#B8851C]" strokeWidth={2} />
+                        <Clock3 className="h-4 w-4 text-[var(--accent)]" strokeWidth={2} />
                         <p className="text-sm font-semibold text-[#223250]">
                           Updating step status
                         </p>
@@ -250,7 +250,7 @@ export default function AgreementPage() {
                       </p>
                     </div>
 
-                    <div className="rounded-[18px] border border-[#E7ECF3] bg-white p-4 text-left shadow-sm">
+                    <div className="rounded-lg border border-[var(--border)] bg-white p-4 text-left">
                       <p className="text-sm font-semibold text-[#223250]">
                         Next step
                       </p>
@@ -262,7 +262,7 @@ export default function AgreementPage() {
 
                   <div className="mt-8 overflow-hidden rounded-full bg-[#E9EEF5]">
                     <div
-                      className="h-2 rounded-full bg-[#C9A65B] transition-all duration-500"
+                      className="h-2 rounded-full bg-[var(--accent)] transition-all duration-500"
                       style={{ width: progressWidth }}
                     />
                   </div>
@@ -275,7 +275,7 @@ export default function AgreementPage() {
             ) : null}
 
             {showSigningFrame ? (
-              <div className="relative overflow-hidden rounded-[20px] border border-[#E2E8F2] bg-white">
+              <div className="relative overflow-hidden rounded-lg border border-[var(--border)] bg-white">
                 {signingUrl ? (
                   <iframe
                     title="DocuSign agreement signing"
@@ -284,7 +284,7 @@ export default function AgreementPage() {
                   />
                 ) : (
                   <>
-                    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-14 bg-gradient-to-b from-white via-white/96 to-transparent" />
+                    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-14 bg-white" />
                     <div className="max-h-[390px] overflow-y-auto px-4 py-8 sm:px-8 lg:px-10">
                       <div className="mx-auto max-w-[700px] rounded-[4px] border border-[#E5EAF2] bg-white px-7 py-8 shadow-[0_14px_32px_rgba(15,23,42,0.06)] sm:px-10 sm:py-10">
                         {agreementSections.map((section, index) => (
@@ -330,7 +330,7 @@ export default function AgreementPage() {
             {!showSigningFrame &&
             !isAgreementComplete &&
             !showPostSigningWaitingScreen ? (
-              <div className="rounded-[20px] border border-[#E2E8F2] bg-white">
+              <div className="rounded-lg border border-[var(--border)] bg-white">
                 <div className="pointer-events-none max-h-[390px] overflow-y-auto px-4 py-8 sm:px-8 lg:px-10">
                   <div className="mx-auto max-w-[700px] rounded-[4px] border border-[#E5EAF2] bg-white px-7 py-8 shadow-[0_14px_32px_rgba(15,23,42,0.06)] sm:px-10 sm:py-10">
                     {agreementSections.map((section, index) => (
