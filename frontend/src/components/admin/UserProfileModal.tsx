@@ -230,7 +230,7 @@ export default function UpdateUserProfileModal({
 
       <button
         type="button"
-        className="absolute inset-0 cursor-pointer bg-[#071633]/50 backdrop-blur-[2px]"
+        className="absolute inset-0 cursor-pointer bg-[#052b46]/50 backdrop-blur-[2px]"
         aria-label="Close update user profile dialog"
         onClick={handleClose}
       />
@@ -239,12 +239,12 @@ export default function UpdateUserProfileModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="update-user-profile-modal-title"
-        className="relative z-10 flex max-h-[min(90dvh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-[24px] bg-white shadow-[0_18px_40px_rgba(8,22,50,0.15)]"
+        className="relative z-10 flex max-h-[min(90dvh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-lg bg-white shadow-[0_18px_40px_rgba(22,26,29,0.15)]"
       >
         <div className="border-b border-[#e8ecf4] px-6 py-5">
           <h2
             id="update-user-profile-modal-title"
-            className="text-xl font-semibold tracking-tight text-[#071633]"
+            className="text-xl font-semibold text-[var(--ink)]"
           >
             Update user profile
           </h2>

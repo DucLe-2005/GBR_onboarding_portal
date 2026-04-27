@@ -87,26 +87,30 @@ function FormField({
     <div>
       <label
         htmlFor={id}
-        className="mb-2 block text-sm font-medium text-[#142B57]"
+        className="mb-2 block text-sm font-medium text-[var(--ink)]"
       >
         {label}
       </label>
-      <div className="flex h-13 items-center rounded-xl border border-[#c8d2e3] bg-white px-4 shadow-sm">
-        <Icon className="mr-3 h-5 w-5 text-[#8ea0bd]" />
+      <div className="field-shell">
+        <Icon className="mr-3 h-5 w-5 text-[var(--text-muted)]" />
         <input
           id={id}
           type={type}
           placeholder={placeholder}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full bg-transparent text-base text-[#142B57] outline-none placeholder:text-[#8ea0bd]"
+          className="w-full bg-transparent text-base text-[var(--ink)] outline-none placeholder:text-[#939891]"
         />
       </div>
     </div>
   );
 }
 
-export default function CreateUserForm() {
+type CreateUserFormProps = {
+  onCreated?: () => void;
+};
+
+export default function CreateUserForm({ onCreated }: CreateUserFormProps) {
   const [formData, setFormData] = useState<CreateUserPayload>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -144,6 +148,7 @@ export default function CreateUserForm() {
         "User created successfully. A temporary password and verification email have been sent.",
       );
       setFormData(initialFormData);
+      onCreated?.();
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to create user.",
@@ -154,7 +159,7 @@ export default function CreateUserForm() {
   }
 
   return (
-    <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_18px_40px_rgba(8,22,50,0.08)]">
+    <div className="panel overflow-hidden">
       {errorMessage ? (
         <Notification
           open
@@ -173,19 +178,17 @@ export default function CreateUserForm() {
         />
       ) : null}
 
-      <div className="relative overflow-hidden bg-[#071633] px-5 py-6 text-white sm:px-8 sm:py-8">
-        <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-white/10 sm:h-28 sm:w-28" />
-
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#C9A65B] text-[#071633] sm:h-14 sm:w-14">
+      <div className="panel-header bg-white">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--accent-dark)] sm:h-14 sm:w-14">
             <UserPlus className="h-7 w-7" />
           </div>
 
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            <h1 className="text-2xl font-semibold text-[var(--ink)] sm:text-3xl">
               Create User
             </h1>
-            <p className="mt-1 text-sm text-white/85">
+            <p className="mt-1 text-sm text-[var(--text-muted)]">
               Add a new account for admin, moderator, buyer, or seller access.
             </p>
           </div>
@@ -235,19 +238,19 @@ export default function CreateUserForm() {
             <div>
               <label
                 htmlFor="role"
-                className="mb-2 block text-sm font-medium text-[#142B57]"
+                className="mb-2 block text-sm font-medium text-[var(--ink)]"
               >
                 Role
               </label>
-              <div className="flex h-13 items-center rounded-xl border border-[#c8d2e3] bg-white px-4 shadow-sm">
-                <UserPlus className="mr-3 h-5 w-5 text-[#8ea0bd]" />
+              <div className="field-shell">
+                <UserPlus className="mr-3 h-5 w-5 text-[var(--text-muted)]" />
                 <select
                   id="role"
                   value={formData.role}
                   onChange={(event) =>
                     updateField("role", event.target.value as UserRole)
                   }
-                  className="w-full bg-transparent text-base text-[#142B57] outline-none"
+                  className="w-full bg-transparent text-base text-[var(--ink)] outline-none"
                 >
                   {roleOptions.map((roleOption) => (
                     <option key={roleOption.value} value={roleOption.value}>

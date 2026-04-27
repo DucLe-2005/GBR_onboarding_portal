@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f9fb;
+  --foreground: #141817;
+  --surface: #ffffff;
+  --surface-muted: #f1f5f8;
+  --border: #d3dde6;
+  --border-strong: #9fb2c3;
+  --text-muted: #5b6b78;
+  --accent: #0b5e89;
+  --accent-dark: #063655;
+  --ink: #0b2236;
 }
 
 @theme inline {
@@ -12,15 +20,73 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  letter-spacing: 0;
+}
+
+::selection {
+  background: #d2e6f3;
+  color: var(--ink);
+}
+
+.app-page {
+  min-height: 100%;
+  background: var(--background);
+}
+
+.app-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1480px;
+  padding: 18px 22px;
+}
+
+@media (min-width: 1024px) {
+  .app-container {
+    padding: 22px 24px;
+  }
+}
+
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.panel-header {
+  border-bottom: 1px solid var(--border);
+  padding: 18px 20px;
+}
+
+.field-shell {
+  display: flex;
+  height: 48px;
+  align-items: center;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #fff;
+  padding-inline: 14px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid #a8c8dc;
+  background: #edf7fc;
+  color: var(--accent-dark);
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
 }

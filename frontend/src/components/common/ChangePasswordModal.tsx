@@ -113,7 +113,7 @@ export function ChangePasswordModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button
         type="button"
-        className="absolute inset-0 cursor-pointer bg-[#071633]/50 backdrop-blur-[2px]"
+        className="absolute inset-0 cursor-pointer bg-[#052b46]/50 backdrop-blur-[2px]"
         aria-label="Close"
         onClick={onClose}
       />
@@ -122,9 +122,9 @@ export function ChangePasswordModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="change-password-title"
-        className="relative z-10 w-full max-w-md overflow-hidden rounded-[24px] bg-white shadow-[0_18px_40px_rgba(8,22,50,0.15)]"
+        className="relative z-10 w-full max-w-md overflow-hidden rounded-lg bg-white shadow-[0_18px_40px_rgba(22,26,29,0.15)]"
       >
-        <div className="border-b border-[#e8ecf4] bg-[#071633] px-6 py-5">
+        <div className="border-b border-[var(--border)] bg-[#052b46] px-6 py-5">
           <h2
             id="change-password-title"
             className="text-xl font-semibold tracking-tight text-white"

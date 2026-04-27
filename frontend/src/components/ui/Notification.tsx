@@ -47,7 +47,7 @@ export function Notification({
     <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
       <button
         type="button"
-        className="absolute inset-0 cursor-pointer bg-[#071633]/45 backdrop-blur-[2px]"
+        className="absolute inset-0 cursor-pointer bg-[#052b46]/45 backdrop-blur-[2px]"
         aria-label="Dismiss notification"
         onClick={onClose}
       />
@@ -57,12 +57,12 @@ export function Notification({
         aria-modal="true"
         aria-labelledby="notification-title"
         aria-describedby="notification-message"
-        className="relative z-10 w-full max-w-md overflow-hidden rounded-[20px] bg-white shadow-[0_18px_40px_rgba(8,22,50,0.18)] sm:rounded-[24px]"
+        className="relative z-10 w-full max-w-md overflow-hidden rounded-lg bg-white shadow-[0_18px_40px_rgba(22,26,29,0.18)]"
       >
-        <div className="flex items-start gap-3 bg-[#071633] px-5 py-5 sm:px-6 sm:py-6">
+        <div className="flex items-start gap-3 bg-[#052b46] px-5 py-5 sm:px-6 sm:py-6">
           <div
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-              isSuccess ? "bg-[#C9A65B]/20 text-[#C9A65B]" : "bg-red-500/15 text-red-300"
+              isSuccess ? "bg-[#edf7fc] text-[#0b5e89]" : "bg-red-500/15 text-red-300"
             }`}
             aria-hidden
           >
