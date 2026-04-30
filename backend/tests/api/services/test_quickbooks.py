@@ -138,6 +138,6 @@ def test_create_invoice_reuses_active_existing_invoice_and_resends_email():
     assert result["customer_id"] == "customer-1"
     assert result["invoice_id"] == "invoice-1"
     assert result["email_sent"] is True
-    assert sen == [
+    assert sent_paths == [
         ("/v3/company/realm-1/invoice/invoice-1/send", {"minorversion": "75"})
     ]
