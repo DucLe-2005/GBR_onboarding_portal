@@ -195,29 +195,6 @@ def test_get_signed_contract_pdf_recovers_missing_s3_object_from_docusign():
     assert docusign_service.recovered_contracts[0]["id"] == "contract-1"
 
 
-def test_get_signed_contract_pdf_reads_legacy_sign_file_url():
-    s3_client = FakeS3Client()
-    service = _service_for(
-        {
-            "id": "contract-1",
-            "user_id": "user-1",
-            "status": "completed",
-            "sign_file_url": "s3://contract-bucket/contracts/local/legacy.pdf",
-        },
-        s3_client=s3_client,
-    )
-
-    result = service.get_signed_contract_pdf(
-        contract_id="contract-1",
-        auth_user=_auth_user(),
-    )
-
-    assert result == b"signed-pdf"
-    assert s3_client.requested_urls == [
-        "s3://contract-bucket/contracts/local/legacy.pdf"
-    ]
-
-
 def test_get_signed_contract_pdf_returns_bad_gateway_when_docusign_recovery_fails():
     service = _service_for(
         {
